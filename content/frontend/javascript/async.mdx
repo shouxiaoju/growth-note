@@ -1,0 +1,106 @@
+---
+title: JavaScript 异步编程
+description: 从回调到 async/await，全面理解 JS 异步编程模型
+date: 2026-05-25
+tags: [JavaScript, 异步, Promise]
+category: frontend/javascript
+order: 2
+---
+
+# JavaScript 异步编程
+
+> 异步编程是 JavaScript 的核心特性之一，理解它才能写出高性能的 Web 应用。
+
+## 1. 什么是异步编程
+
+JavaScript 是单线程语言，通过事件循环（Event Loop）实现异步非阻塞：
+
+```javascript
+console.log('1');
+setTimeout(() => console.log('2'), 0);
+console.log('3');
+// 输出：1, 3, 2（而非 1, 2, 3）
+```
+
+## 2. 回调函数
+
+最早的异步方式，但容易陷入"回调地狱"：
+
+```javascript
+// ❌ 回调地狱
+getData(function(a) {
+  getMoreData(a, function(b) {
+    getEvenMoreData(b, function(c) {
+      console.log(c);
+    });
+  });
+});
+```
+
+## 3. Promise
+
+Promise 是异步编程的基石：
+
+```javascript
+const fetchData = () => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve('done'), 1000);
+  });
+};
+
+// 链式调用
+fetchData()
+  .then(result => processResult(result))
+  .then(data => saveData(data))
+  .catch(error => console.error(error));
+
+// 并行执行
+const [users, posts] = await Promise.all([
+  fetchUsers(),
+  fetchPosts()
+]);
+```
+
+## 4. async/await
+
+async/await 是 Promise 的语法糖，让异步代码看起来像同步：
+
+```javascript
+async function loadData() {
+  try {
+    const result = await fetchData();
+    const processed = await processResult(result);
+    return processed;
+  } catch (error) {
+    console.error('加载失败:', error);
+  }
+}
+```
+
+> 💡 个人分析：async/await 本质是 Promise 的语法糖，在错误处理上 `try/catch` 比 `.catch()` 更直观，但在并行场景 `Promise.all` 更优。
+
+## 5. 事件循环机制
+
+```
+┌──────────────────────────┐
+│       调用栈 (Call Stack)  │
+└────────────┬─────────────┘
+             │
+     ┌───────▼────────┐
+     │   微任务队列     │  ← Promise.then, queueMicrotask
+     │   (Microtask)   │
+     └───────┬────────┘
+             │
+     ┌───────▼────────┐
+     │   宏任务队列     │  ← setTimeout, setInterval, I/O
+     │   (Macrotask)   │
+     └────────────────┘
+```
+
+执行顺序：同步代码 → 微任务 → 宏任务
+
+## 6. 个人分析
+
+- 回调 → Promise → async/await 是演进路线，每一层都解决了上层痛点
+- 实际项目中优先使用 async/await，并行场景用 Promise.all
+- 理解事件循环是排查异步 Bug 的关键

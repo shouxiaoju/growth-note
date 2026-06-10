@@ -1,0 +1,59 @@
+---
+title: AI Agent 开发入门
+description: 从概念到实践，理解 AI Agent 的架构与开发模式
+date: 2026-05-28
+tags: [AI, Agent, 智能体]
+category: ai/agent-development
+order: 1
+---
+
+# AI Agent 开发入门
+
+> AI Agent 是能自主感知环境、做出决策并执行动作的智能体。
+
+## 1. Agent 核心架构
+
+```
+┌─────────────────────────────┐
+│         用户输入              │
+└──────────┬──────────────────┘
+           │
+     ┌─────▼──────┐
+     │   LLM 大脑   │  ← 推理与决策
+     └─────┬──────┘
+           │
+     ┌─────▼──────┐
+     │  工具调用    │  ← 执行动作
+     └─────┬──────┘
+           │
+     ┌─────▼──────┐
+     │  观察反馈    │  ← 感知结果
+     └─────────────┘
+```
+
+## 2. Agent vs 传统程序
+
+| 维度 | 传统程序 | AI Agent |
+|------|----------|----------|
+| 决策方式 | 规则驱动 | LLM 推理 |
+| 灵活性 | 固定流程 | 动态规划 |
+| 适用场景 | 确定性任务 | 开放性任务 |
+
+## 3. 开发框架
+
+```python
+# LangChain Agent 示例
+from langchain.agents import create_react_agent
+
+agent = create_react_agent(
+    llm=llm,
+    tools=[search_tool, calculator_tool],
+    prompt=react_prompt
+)
+```
+
+## 4. 个人分析
+
+- Agent 的核心是 ReAct 循环：推理→行动→观察→再推理
+- 工具设计是 Agent 开发的关键：好的工具描述让 LLM 做出更好的决策
+- 目前 Agent 还不适合需要 100% 确定性的场景

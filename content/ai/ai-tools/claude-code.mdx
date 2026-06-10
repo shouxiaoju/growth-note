@@ -1,0 +1,44 @@
+---
+title: AI 工具实战：Claude Code
+description: Claude Code 使用技巧与高效工作流
+date: 2026-05-26
+tags: [AI, 工具, Claude]
+category: ai/ai-tools
+order: 1
+---
+
+# AI 工具实战：Claude Code
+
+> Claude Code 是 AI 辅助编程工具的代表，掌握它能大幅提升开发效率。
+
+## 1. 高效使用模式
+
+### 上下文先行
+
+```text
+❌ 直接问：帮我修这个 bug
+✅ 先给上下文：
+   - 项目使用 Next.js + TypeScript
+   - 错误信息：TypeError: Cannot read property 'map' of undefined
+   - 相关代码：src/components/UserList.tsx
+   - 数据来源：API 返回 { users: [] }
+```
+
+### 分步引导
+
+```text
+第一步：分析错误原因
+第二步：给出修复方案
+第三步：提供优化建议
+```
+
+## 2. 最佳实践
+
+- 给出明确的约束条件（框架版本、技术栈、代码风格）
+- 让 AI 先分析再动手，而不是直接生成代码
+- 生成的代码要人工 Review，不要盲目信任
+
+## 3. 个人分析
+
+- AI 编程工具是"加速器"而非"替代品"
+- 最佳工作流：AI 生成初版 → 人工审查修改 → AI 辅助优化

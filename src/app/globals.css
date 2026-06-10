@@ -1,26 +1,302 @@
-@import "tailwindcss";
+/**
+ * 全局样式文件
+ *
+ * 结构说明：
+ *   1. @import 引入 Tailwind CSS 和动画库
+ *   2. @custom-variant 定义暗黑模式变体（基于 .dark class）
+ *   3. @theme inline 定义设计令牌（Design Tokens）→ 映射到 CSS 变量
+ *   4. :root 定义浅色模式的 CSS 变量值
+ *   5. .dark 定义暗色模式的 CSS 变量值
+ *   6. @layer base 全局基础样式
+ *   7. .article-content 文章正文专用样式
+ *   8. .hljs-* 代码语法高亮颜色
+ *
+ * 色彩体系（对应 DESIGN.md 配色方案）：
+ *   浅色主色 #2563EB（晴空蓝天）→ 暗色主色 #60A5FA
+ *   浅色辅助 #7C3AED（暮色霞光）→ 暗色辅助 #A78BFA
+ *   浅色背景 #FFFFFF             → 暗色背景 #0F172A
+ */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ===== 基础框架导入 ===== */
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
+/* 暗黑模式变体：当 HTML 根元素包含 .dark class 时生效 */
+@custom-variant dark (&:is(.dark *));
+
+/* ===== 设计令牌映射 ===== */
+/* 将 CSS 变量映射为 Tailwind 主题色，使 bg-primary、text-foreground 等可用 */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* 圆角系统：基于 --radius 基准值递增 */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* 字体栈：中文优先，等宽字体用于代码 */
+  --font-sans:
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', ui-sans-serif,
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  --font-serif:
+    'Noto Serif SC', 'Songti SC', 'SimSun', ui-serif, Georgia, Cambria,
+    'Times New Roman', Times, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ===== 浅色模式变量 ===== */
+:root {
+  --radius: 0.625rem;
+  --background: #ffffff;           /* 页面背景 */
+  --foreground: #1F2937;           /* 正文文字 */
+  --card: #ffffff;                 /* 卡片背景 */
+  --card-foreground: #1F2937;      /* 卡片文字 */
+  --popover: #ffffff;
+  --popover-foreground: #1F2937;
+  --primary: #2563EB;              /* 主色：专业蓝 */
+  --primary-foreground: #ffffff;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #1F2937;
+  --muted: #F1F5F9;               /* 弱化背景 */
+  --muted-foreground: #6B7280;     /* 弱化文字 */
+  --accent: #F1F5F9;
+  --accent-foreground: #1F2937;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #E5E7EB;              /* 边框色 */
+  --input: #E5E7EB;
+  --ring: #2563EB;
+  --chart-1: #2563EB;             /* 图表色：主色 */
+  --chart-2: #7C3AED;             /* 图表色：辅助紫 */
+  --chart-3: #10B981;             /* 图表色：成功绿 */
+  --chart-4: #F59E0B;             /* 图表色：警告黄 */
+  --chart-5: #EF4444;             /* 图表色：错误红 */
+  --sidebar: #F8FAFC;             /* 侧边栏背景 */
+  --sidebar-foreground: #1F2937;
+  --sidebar-primary: #2563EB;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #F1F5F9;
+  --sidebar-accent-foreground: #1F2937;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #2563EB;
+}
+
+/* ===== 暗色模式变量 ===== */
+.dark {
+  --background: #0F172A;           /* 深海蓝背景 */
+  --foreground: #E2E8F0;           /* 浅色正文 */
+  --card: #1E293B;
+  --card-foreground: #E2E8F0;
+  --popover: #1E293B;
+  --popover-foreground: #E2E8F0;
+  --primary: #60A5FA;              /* 主色：明亮蓝 */
+  --primary-foreground: #0F172A;
+  --secondary: #1E293B;
+  --secondary-foreground: #E2E8F0;
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
+  --accent: #1E293B;
+  --accent-foreground: #E2E8F0;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: #334155;
+  --input: #334155;
+  --ring: #60A5FA;
+  --chart-1: #60A5FA;
+  --chart-2: #A78BFA;              /* 辅助紫（暗色版） */
+  --chart-3: #34D399;
+  --chart-4: #FBBF24;
+  --chart-5: #F87171;
+  --sidebar: #1E293B;
+  --sidebar-foreground: #E2E8F0;
+  --sidebar-primary: #60A5FA;
+  --sidebar-primary-foreground: #0F172A;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #E2E8F0;
+  --sidebar-border: #334155;
+  --sidebar-ring: #60A5FA;
+}
+
+/* ===== 全局基础样式 ===== */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply font-sans;
 }
+
+/* ===== 文章正文排版样式 ===== */
+/* .article-content 类用于 MDX 渲染的文章正文区域 */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--primary);
+  --tw-prose-code: var(--primary);
+  --tw-prose-pre-bg: var(--muted);
+}
+
+/* 标题：scroll-margin-top 确保 TOC 锚点跳转时标题不被固定导航栏遮挡 */
+.article-content h2 {
+  @apply text-2xl font-bold mt-10 mb-4 pb-2 border-b border-border;
+  scroll-margin-top: 5rem;
+}
+
+.article-content h3 {
+  @apply text-xl font-semibold mt-8 mb-3;
+  scroll-margin-top: 5rem;
+}
+
+.article-content h4 {
+  @apply text-lg font-semibold mt-6 mb-2;
+  scroll-margin-top: 5rem;
+}
+
+.article-content p {
+  @apply mb-4 leading-7;
+}
+
+.article-content ul, .article-content ol {
+  @apply mb-4 pl-6;
+}
+
+.article-content ul {
+  @apply list-disc;
+}
+
+.article-content ol {
+  @apply list-decimal;
+}
+
+.article-content li {
+  @apply mb-1.5 leading-7;
+}
+
+/* 引用块：左侧蓝色竖线 + 浅蓝背景 */
+.article-content blockquote {
+  @apply border-l-4 border-primary/40 bg-primary/5 rounded-r-md px-4 py-3 my-4;
+}
+
+.article-content blockquote p {
+  @apply mb-0;
+}
+
+/* 行内代码：浅背景 + 圆角 + 等宽字体 */
+.article-content code {
+  @apply bg-muted text-primary rounded px-1.5 py-0.5 text-sm font-mono;
+}
+
+/* 代码块：圆角容器 + 横向滚动 */
+.article-content pre {
+  @apply bg-muted rounded-lg p-4 my-4 overflow-x-auto;
+}
+
+/* 代码块内的 code 标签：去除行内代码的额外样式 */
+.article-content pre code {
+  @apply bg-transparent text-foreground p-0 text-sm;
+}
+
+/* 表格样式 */
+.article-content table {
+  @apply w-full my-4 text-sm;
+}
+
+.article-content thead {
+  @apply border-b border-border;
+}
+
+.article-content th {
+  @apply text-left py-2 px-3 font-semibold;
+}
+
+.article-content td {
+  @apply py-2 px-3 border-b border-border/50;
+}
+
+.article-content hr {
+  @apply my-8 border-border;
+}
+
+.article-content a {
+  @apply text-primary hover:underline;
+}
+
+.article-content strong {
+  @apply font-semibold;
+}
+
+/* ===== 代码语法高亮颜色 ===== */
+/* 基于 highlight.js 的 class 名，对应 rehype-highlight 插件输出 */
+/* 浅色模式高亮色 */
+.hljs-keyword { color: #7C3AED; }       /* 关键字：紫色 */
+.hljs-string { color: #10B981; }        /* 字符串：绿色 */
+.hljs-number { color: #F59E0B; }        /* 数字：黄色 */
+.hljs-comment { color: #94A3B8; font-style: italic; } /* 注释：灰色斜体 */
+.hljs-function { color: #2563EB; }      /* 函数名：蓝色 */
+.hljs-title { color: #2563EB; }         /* 标题：蓝色 */
+.hljs-params { color: #6B7280; }        /* 参数：灰色 */
+.hljs-built_in { color: #EF4444; }      /* 内置对象：红色 */
+.hljs-literal { color: #F59E0B; }       /* 字面量：黄色 */
+.hljs-type { color: #7C3AED; }          /* 类型：紫色 */
+.hljs-attr { color: #10B981; }          /* 属性：绿色 */
+.hljs-selector-tag { color: #7C3AED; }  /* CSS 选择器标签：紫色 */
+.hljs-selector-class { color: #2563EB; }/* CSS 选择器类：蓝色 */
+.hljs-property { color: #6B7280; }      /* 属性名：灰色 */
+.hljs-meta { color: #94A3B8; }          /* 元信息：灰色 */
+
+/* 暗色模式高亮色：更亮更饱和，适配深色背景 */
+.dark .hljs-keyword { color: #A78BFA; }
+.dark .hljs-string { color: #34D399; }
+.dark .hljs-number { color: #FBBF24; }
+.dark .hljs-comment { color: #64748B; font-style: italic; }
+.dark .hljs-function { color: #60A5FA; }
+.dark .hljs-title { color: #60A5FA; }
+.dark .hljs-params { color: #94A3B8; }
+.dark .hljs-built_in { color: #F87171; }
+.dark .hljs-literal { color: #FBBF24; }
+.dark .hljs-type { color: #A78BFA; }
+.dark .hljs-attr { color: #34D399; }
+.dark .hljs-selector-tag { color: #A78BFA; }
+.dark .hljs-selector-class { color: #60A5FA; }
+.dark .hljs-property { color: #94A3B8; }
+.dark .hljs-meta { color: #64748B; }

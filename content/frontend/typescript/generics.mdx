@@ -1,0 +1,51 @@
+---
+title: TypeScript 泛型详解
+description: 深入理解 TypeScript 泛型：约束、默认值、条件类型与 infer
+date: 2026-05-26
+tags: [TypeScript, 泛型]
+category: frontend/typescript
+order: 2
+---
+
+# TypeScript 泛型详解
+
+> 泛型是 TypeScript 实现类型安全的代码复用的核心机制。
+
+## 1. 泛型基础
+
+```typescript
+function first<T>(arr: T[]): T {
+  return arr[0];
+}
+
+first([1, 2, 3]);     // number
+first(['a', 'b']);    // string
+```
+
+## 2. 泛型约束
+
+```typescript
+interface HasId {
+  id: number;
+}
+
+function findById<T extends HasId>(items: T[], id: number): T | undefined {
+  return items.find(item => item.id === id);
+}
+```
+
+## 3. 条件类型与 infer
+
+```typescript
+// 条件类型
+type IsString<T> = T extends string ? true : false;
+
+// infer 提取类型
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+type Unpacked<T> = T extends Promise<infer U> ? U : T;
+```
+
+## 4. 个人分析
+
+- 泛型不是越复杂越好，简单场景用 any/unknown 反而更实用
+- 掌握 `extends`、`infer` 和条件类型就覆盖了 90% 的泛型需求

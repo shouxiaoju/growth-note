@@ -1,0 +1,101 @@
+---
+title: TypeScript 类型系统
+description: TypeScript 类型系统核心概念：基础类型、接口、类型别名与高级类型
+date: 2026-05-30
+tags: [TypeScript, 类型系统]
+category: frontend/typescript
+order: 1
+---
+
+# TypeScript 类型系统
+
+> TypeScript 的类型系统是它最强大的武器，理解类型系统才能写出真正安全的代码。
+
+## 1. 基础类型
+
+```typescript
+// 原始类型
+let name: string = 'Alice';
+let age: number = 25;
+let isActive: boolean = true;
+
+// 数组
+let numbers: number[] = [1, 2, 3];
+let strings: Array<string> = ['a', 'b'];
+
+// 元组
+let pair: [string, number] = ['Alice', 25];
+
+// 枚举
+enum Direction {
+  Up = 'UP',
+  Down = 'DOWN',
+  Left = 'LEFT',
+  Right = 'RIGHT',
+}
+```
+
+## 2. 接口与类型别名
+
+```typescript
+// 接口
+interface User {
+  id: number;
+  name: string;
+  email?: string;  // 可选属性
+  readonly createdAt: Date;  // 只读属性
+}
+
+// 类型别名
+type Status = 'active' | 'inactive' | 'banned';
+type Callback = (data: User) => void;
+
+// 两者区别
+// interface: 可声明合并，适合定义对象形状
+// type: 更灵活，支持联合、交叉、条件类型
+```
+
+## 3. 泛型
+
+```typescript
+function identity<T>(value: T): T {
+  return value;
+}
+
+// 泛型约束
+interface HasLength {
+  length: number;
+}
+
+function getLength<T extends HasLength>(value: T): number {
+  return value.length;
+}
+
+// 泛型在 React 中的应用
+type Props<T> = {
+  data: T[];
+  renderItem: (item: T) => React.ReactNode;
+};
+```
+
+## 4. 工具类型
+
+```typescript
+// Partial - 所有属性可选
+type PartialUser = Partial<User>;
+
+// Pick - 选取部分属性
+type UserPreview = Pick<User, 'id' | 'name'>;
+
+// Omit - 排除部分属性
+type UserWithoutEmail = Omit<User, 'email'>;
+
+// Record - 键值对映射
+type UserMap = Record<string, User>;
+```
+
+## 5. 个人分析
+
+- TypeScript 类型系统是图灵完备的，但实际开发中不需要用到所有高级特性
+- 优先使用 `interface` 定义对象，`type` 定义联合和工具类型
+- 善用内置工具类型（Partial/Pick/Omit/Record）减少重复代码

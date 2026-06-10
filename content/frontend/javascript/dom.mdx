@@ -1,0 +1,64 @@
+---
+title: JavaScript DOM 操作
+description: DOM 选择器、事件处理与元素操作详解
+date: 2026-05-20
+tags: [JavaScript, DOM]
+category: frontend/javascript
+order: 3
+---
+
+# JavaScript DOM 操作
+
+> DOM 是连接 JavaScript 与 HTML 的桥梁，掌握 DOM 操作才能让页面"动起来"。
+
+## 1. 选择器
+
+```javascript
+// 单个元素
+document.getElementById('app');
+document.querySelector('.class-name');
+
+// 多个元素
+document.querySelectorAll('li.item');  // NodeList
+document.getElementsByClassName('item'); // HTMLCollection
+```
+
+## 2. 事件处理
+
+```javascript
+// 现代方式（推荐）
+button.addEventListener('click', (event) => {
+  console.log('clicked', event.target);
+});
+
+// 事件委托（性能优化）
+list.addEventListener('click', (e) => {
+  if (e.target.matches('li.item')) {
+    handleClick(e.target);
+  }
+});
+```
+
+## 3. 元素操作
+
+```javascript
+// 创建与插入
+const el = document.createElement('div');
+el.textContent = 'Hello';
+el.classList.add('active');
+document.body.appendChild(el);
+
+// 修改属性
+el.setAttribute('data-id', '123');
+el.removeAttribute('hidden');
+
+// 修改样式
+el.style.color = 'red';
+el.style.transform = 'translateX(100px)';
+```
+
+## 4. 个人分析
+
+- 现代 React/Vue 项目中直接操作 DOM 的场景减少，但理解 DOM 仍是前端基本功
+- 事件委托是处理大量元素事件的最佳实践
+- 批量 DOM 操作时使用 DocumentFragment 减少重排

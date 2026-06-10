@@ -1,0 +1,101 @@
+---
+title: React Hooks 深入理解
+description: 从 useState 到自定义 Hook，全面掌握 React Hooks
+date: 2026-06-02
+tags: [React, Hooks]
+category: frontend/react
+order: 1
+---
+
+# React Hooks 深入理解
+
+> Hooks 让函数组件拥有了状态管理能力，是现代 React 开发的核心。
+
+## 1. useState
+
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>当前计数: {count}</p>
+      <button onClick={() => setCount(c => c + 1)}>+1</button>
+    </div>
+  );
+}
+```
+
+> ⚠️ 易错点：`setCount(count + 1)` 在连续调用时会丢失更新，应使用函数式更新 `setCount(c => c + 1)`。
+
+## 2. useEffect
+
+```jsx
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetchUser(userId).then(setUser);
+    return () => {
+      // 清理函数
+    };
+  }, [userId]); // 依赖数组
+
+  if (!user) return <div>加载中...</div>;
+  return <div>{user.name}</div>;
+}
+```
+
+### useEffect 常见陷阱
+
+```jsx
+// ❌ 无限循环
+useEffect(() => {
+  setData([...data, newItem]); // data 变化触发重新执行
+}); // 缺少依赖数组
+
+// ✅ 正确做法
+useEffect(() => {
+  setData(prev => [...prev, newItem]);
+}, []); // 空依赖 = 只执行一次
+```
+
+## 3. useCallback 与 useMemo
+
+```jsx
+// useCallback - 缓存函数引用
+const handleClick = useCallback(() => {
+  setCount(c => c + 1);
+}, []);
+
+// useMemo - 缓存计算结果
+const expensiveValue = useMemo(() => {
+  return computeExpensiveValue(data);
+}, [data]);
+```
+
+## 4. 自定义 Hook
+
+```jsx
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : initialValue;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
+// 使用
+const [theme, setTheme] = useLocalStorage('theme', 'light');
+```
+
+## 5. 个人分析
+
+- Hooks 的心智模型是"每次渲染都是快照"，理解这点就不会被闭包陷阱困扰
+- `useCallback` 和 `useMemo` 是性能优化手段，不是默认选项
+- 自定义 Hook 是复用状态逻辑的最佳方式，优先提取而非复制代码

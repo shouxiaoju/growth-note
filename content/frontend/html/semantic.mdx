@@ -1,0 +1,65 @@
+---
+title: HTML5 语义化标签详解
+description: 深入理解 HTML5 语义化标签的使用场景与最佳实践
+date: 2026-05-28
+tags: [HTML, 语义化]
+category: frontend/html
+order: 2
+---
+
+# HTML5 语义化标签详解
+
+> 语义化标签让代码不只是给人看的，更是给机器理解的。
+
+## 1. 为什么需要语义化
+
+传统 HTML 页面充斥着 `<div>` 和 `<span>`，被称为"div 汤"：
+
+```html
+<!-- ❌ 非语义化 -->
+<div class="header">
+  <div class="nav">...</div>
+</div>
+<div class="content">
+  <div class="article">...</div>
+</div>
+
+<!-- ✅ 语义化 -->
+<header>
+  <nav>...</nav>
+</header>
+<main>
+  <article>...</article>
+</main>
+```
+
+语义化的好处：
+- **SEO 友好**：搜索引擎能更好理解页面结构
+- **无障碍**：屏幕阅读器能准确导航
+- **可维护性**：代码结构一目了然
+
+## 2. 各标签使用场景
+
+### `<article>` vs `<section>`
+
+- `<article>`：独立、可脱离上下文独立存在的内容（博客文章、评论）
+- `<section>`： thematic 分组，通常带标题
+
+```html
+<article>
+  <h1>博客文章标题</h1>
+  <section>
+    <h2>第一章</h2>
+    <p>内容...</p>
+  </section>
+  <section>
+    <h2>第二章</h2>
+    <p>内容...</p>
+  </section>
+</article>
+```
+
+## 3. 个人分析
+
+- 语义化不是银弹，过度使用也会增加 DOM 复杂度
+- 关键原则：用正确的标签做正确的事，而非全部语义化

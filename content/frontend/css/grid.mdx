@@ -1,0 +1,55 @@
+---
+title: CSS3 Grid 网格布局
+description: CSS Grid 二维布局系统详解，掌握现代页面布局利器
+date: 2026-05-25
+tags: [CSS, Grid, 布局]
+category: frontend/css
+order: 2
+---
+
+# CSS3 Grid 网格布局
+
+> Grid 是 CSS 真正的二维布局系统，擅长处理行与列同时控制的复杂布局。
+
+## 1. 基础概念
+
+```css
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto;
+  gap: 16px;
+}
+```
+
+## 2. 定义网格
+
+### 固定与弹性列
+
+```css
+.layout {
+  display: grid;
+  /* 250px固定侧边栏 + 自适应内容区 */
+  grid-template-columns: 250px 1fr;
+  grid-template-rows: 60px 1fr 40px;
+  grid-template-areas:
+    "header header"
+    "sidebar main"
+    "footer footer";
+}
+```
+
+### grid-template-areas 命名布局
+
+```css
+.header  { grid-area: header; }
+.sidebar { grid-area: sidebar; }
+.main    { grid-area: main; }
+.footer  { grid-area: footer; }
+```
+
+## 3. 个人分析
+
+- Grid 适合页面级布局，Flexbox 适合组件级布局
+- `fr` 单位比 `%` 更适合网格分配
+- 实战组合：Grid 做页面骨架 + Flexbox 做内部排列
