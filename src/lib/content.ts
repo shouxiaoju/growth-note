@@ -166,10 +166,14 @@ export function getCategories(): CategoryInfo[] {
   return Object.entries(categoryConfig).map(([key, config]) => {
     const children = Object.entries(config.children).map(
       ([childSlug, childName]) => {
-        const articleCount = allArticles.filter(
+        const childArticles = allArticles.filter(
           (a) => a.category === `${key}/${childSlug}`
-        ).length;
-        return { name: childName, slug: `${key}/${childSlug}`, articleCount };
+        );
+        const articleCount = childArticles.length;
+        const articles = childArticles
+          .sort((a, b) => a.order - b.order)
+          .map((a) => ({ title: a.title, slug: a.slug }));
+        return { name: childName, slug: `${key}/${childSlug}`, articleCount, articles };
       }
     );
 

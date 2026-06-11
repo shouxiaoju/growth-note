@@ -22,11 +22,18 @@ export interface CategoryInfo {
   articleCount: number; // 该分类下文章总数（由 content.ts 填充）
 }
 
+/** 子分类下的文章摘要（用于侧边栏展开后的文章列表） */
+export interface ArticleSummary {
+  title: string;
+  slug: string;
+}
+
 /** 子分类信息，对应每个技术方向 */
 export interface SubCategoryInfo {
   name: string;         // 子分类显示名称，如"HTML5"
   slug: string;         // 完整 URL 路径标识，如"frontend/html"
   articleCount: number; // 该子分类下文章数（由 content.ts 填充）
+  articles: ArticleSummary[]; // 该子分类下的文章列表（用于侧边栏展开）
 }
 
 /**
@@ -50,7 +57,17 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
       javascript: 'JavaScript',
       react: 'React',
       typescript: 'TypeScript',
-      miniapp: '微信小程序',
+      //miniapp: '微信小程序',
+    },
+  },
+  backend: {
+    name: '后端开发',
+    icon: '🖥️',
+    description: 'Java · Spring Boot · MySQL（即将上线）',
+    children: {
+      java: 'Java',
+      springboot: 'Spring Boot',
+      mysql: 'MySQL',
     },
   },
   ai: {
@@ -63,16 +80,6 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
       'ai-tools': 'AI 工具',
       rag: 'RAG',
       llm: '大模型',
-    },
-  },
-  backend: {
-    name: '后端开发',
-    icon: '🖥️',
-    description: 'Java · Spring Boot · MySQL（即将上线）',
-    children: {
-      java: 'Java',
-      springboot: 'Spring Boot',
-      mysql: 'MySQL',
     },
   },
 };

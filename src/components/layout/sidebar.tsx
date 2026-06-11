@@ -2,8 +2,10 @@
  * @file 左侧分类导航侧边栏（客户端组件）
  * @description 文档页的左侧分类目录，支持：
  *   - 顶级分类折叠/展开（点击分类名称切换）
- *   - 子分类列表展示（带文章计数）
- *   - 当前选中分类高亮
+ *   - 子分类折叠/展开（点击 ▼ 箭头切换），展开显示该分类下的文章列表
+ *   - 文章计数展示
+ *   - 当前选中分类/文章高亮
+ *   - 自动展开当前路由所在的子分类
  *   - 响应式：桌面端固定侧边栏，移动端隐藏
  *
  * 数据流：
@@ -23,13 +25,18 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { categoryConfig } from '@/lib/categories';
 
-/** 分类树节点（包含服务端返回的文章计数） */
+/** 分类树节点（包含服务端返回的文章计数和文章列表） */
 interface CategoryNode {
   name: string;
   icon: string;
   description: string;
   slug: string;
-  children: { name: string; slug: string; count: number }[];
+  children: {
+    name: string;
+    slug: string;
+    count: number;
+    articles: { title: string; slug: string }[];
+  }[];
 }
 
 export function Sidebar() {
@@ -38,6 +45,8 @@ export function Sidebar() {
   const [categories, setCategories] = useState<CategoryNode[]>([]);
   // 各顶级分类的折叠状态，默认全部展开
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // 各子分类的折叠状态，默认展开当前路由所在的子分类
+  const [subExpanded, setSubExpanded] = useState<Record<string, boolean>>({});
 
   // 从 API 获取分类树数据（含文章计数）
   useEffect(() => {
@@ -49,9 +58,26 @@ export function Sidebar() {
       });
   }, []);
 
+  // 当分类数据或路由变化时，自动展开当前路由所在的子分类
+  useEffect(() => {
+    if (categories.length === 0) return;
+    categories.forEach((cat) => {
+      cat.children.forEach((child) => {
+        if (pathname.startsWith(`/docs/${child.slug}`)) {
+          setSubExpanded((prev) => ({ ...prev, [child.slug]: true }));
+        }
+      });
+    });
+  }, [categories, pathname]);
+
   // 切换分类折叠状态
   const toggleExpand = (slug: string) => {
     setExpanded((prev) => ({ ...prev, [slug]: !prev[slug] }));
+  };
+
+  // 切换子分类折叠状态
+  const toggleSubExpand = (slug: string) => {
+    setSubExpanded((prev) => ({ ...prev, [slug]: !prev[slug] }));
   };
 
   // 判断当前路径是否匹配某分类（用于高亮）
@@ -94,23 +120,59 @@ export function Sidebar() {
                 {expanded[cat.slug] !== false && (
                   <div className="ml-4 mt-1 space-y-0.5">
                     {cat.children.map((child) => (
-                      <Link
-                        key={child.slug}
-                        href={`/docs/${child.slug}`}
-                        className={`flex items-center justify-between px-3 py-1.5 text-sm rounded-md transition-colors ${
-                          isActive(child.slug)
-                            ? 'bg-primary/10 text-primary font-medium'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        }`}
-                      >
-                        <span>▸ {child.name}</span>
-                        {/* 文章计数 */}
-                        {child.count > 0 && (
-                          <span className="text-xs text-muted-foreground">
-                            {child.count}
-                          </span>
+                      <div key={child.slug}>
+                        {/* 子分类标题行：点击展开折叠 + 跳转 */}
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => toggleSubExpand(child.slug)}
+                            className="text-xs text-muted-foreground hover:text-foreground p-1 transition-colors shrink-0"
+                            aria-label={subExpanded[child.slug] ? '折叠' : '展开'}
+                          >
+                            <span
+                              className={`inline-block transition-transform ${
+                                subExpanded[child.slug] ? 'rotate-0' : '-rotate-90'
+                              }`}
+                            >
+                              ▼
+                            </span>
+                          </button>
+                          <Link
+                            href={`/docs/${child.slug}`}
+                            className={`flex items-center justify-between flex-1 px-2 py-1.5 text-sm rounded-md transition-colors ${
+                              isActive(child.slug)
+                                ? 'bg-primary/10 text-primary font-medium'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            }`}
+                          >
+                            <span>{child.name}</span>
+                            {/* 文章计数 */}
+                            {child.count > 0 && (
+                              <span className="text-xs text-muted-foreground ml-1">
+                                {child.count}
+                              </span>
+                            )}
+                          </Link>
+                        </div>
+
+                        {/* 子分类下的文章列表（可折叠） */}
+                        {subExpanded[child.slug] && child.articles.length > 0 && (
+                          <div className="ml-6 mt-0.5 space-y-0.5 border-l border-border/60 pl-3">
+                            {child.articles.map((article) => (
+                              <Link
+                                key={article.slug}
+                                href={`/docs/${article.slug}`}
+                                className={`block px-2 py-1 text-sm rounded-md transition-colors truncate ${
+                                  pathname === `/docs/${article.slug}`
+                                    ? 'bg-primary/10 text-primary font-medium'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                }`}
+                              >
+                                {article.title}
+                              </Link>
+                            ))}
+                          </div>
                         )}
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -141,17 +203,34 @@ export function Sidebar() {
                   <div className="ml-4 mt-1 space-y-0.5">
                     {Object.entries(config.children).map(
                       ([childSlug, childName]) => (
-                        <Link
-                          key={childSlug}
-                          href={`/docs/${key}/${childSlug}`}
-                          className={`flex items-center px-3 py-1.5 text-sm rounded-md transition-colors ${
-                            isActive(`${key}/${childSlug}`)
-                              ? 'bg-primary/10 text-primary font-medium'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                          }`}
-                        >
-                          <span>▸ {childName}</span>
-                        </Link>
+                        <div key={childSlug}>
+                          <div className="flex items-center">
+                            <button
+                              onClick={() => toggleSubExpand(`${key}/${childSlug}`)}
+                              className="text-xs text-muted-foreground hover:text-foreground p-1 transition-colors shrink-0"
+                              aria-label={subExpanded[`${key}/${childSlug}`] ? '折叠' : '展开'}
+                            >
+                              <span
+                                className={`inline-block transition-transform ${
+                                  subExpanded[`${key}/${childSlug}`] ? 'rotate-0' : '-rotate-90'
+                                }`}
+                              >
+                                ▼
+                              </span>
+                            </button>
+                            <Link
+                              key={childSlug}
+                              href={`/docs/${key}/${childSlug}`}
+                              className={`flex-1 px-2 py-1.5 text-sm rounded-md transition-colors ${
+                                isActive(`${key}/${childSlug}`)
+                                  ? 'bg-primary/10 text-primary font-medium'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                              }`}
+                            >
+                              <span>{childName}</span>
+                            </Link>
+                          </div>
+                        </div>
                       )
                     )}
                   </div>
