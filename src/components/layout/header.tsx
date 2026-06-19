@@ -70,7 +70,7 @@ export function Header() {
   // 导航链接配置
   const navLinks = [
     { href: '/docs/frontend/html', label: '前端开发' },
-    { href: '/docs/ai/prompt-engineering', label: 'AI 开发' },
+    { href: '/docs/backend/java', label: '后端开发' },
     { href: '/about', label: '关于' },
   ];
 

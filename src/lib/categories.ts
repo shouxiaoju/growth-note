@@ -68,6 +68,7 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
       java: 'Java',
       springboot: 'Spring Boot',
       mysql: 'MySQL',
+      python:'Python'
     },
   },
   ai: {

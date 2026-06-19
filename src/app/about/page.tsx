@@ -20,6 +20,7 @@ export default function AboutPage() {
     'Vue',
     'Node.js',
     'Tailwind CSS',
+    'HTML',
     'HTML5',
     'CSS3',
     'Webpack',
@@ -35,7 +36,7 @@ export default function AboutPage() {
   const contacts = [
     { icon: '💻', label: 'GitHub', value: 'github.com/liuxiansheng', href: '#' },
     { icon: '📧', label: '邮箱', value: 'liuxiansheng@example.com', href: 'mailto:liuxiansheng@example.com' },
-    { icon: '💬', label: '微信', value: 'liuxiansheng_dev', href: undefined },
+    { icon: '💬', label: '微信', value: '15838426619', href: undefined },
   ];
 
   return (
@@ -72,7 +73,7 @@ export default function AboutPage() {
       </section>
 
       {/* ========== 联系方式 ========== */}
-      <section className="mb-12">
+      {/* <section className="mb-12">
         <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
           <span>📬</span> 联系方式
         </h2>
@@ -101,7 +102,7 @@ export default function AboutPage() {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* ========== 关于本站 ========== */}
       <section>
@@ -110,7 +111,7 @@ export default function AboutPage() {
         </h2>
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-4 text-foreground leading-7">
           <p>
-            这是我的个人学习笔记网站，用来记录和整理平时学习的技术知识。
+            这是我的个人学习笔记网站，并不是从0基础开始学习，是个人用来记录和整理平时学习的技术知识。
             参考菜鸟教程的分类风格 + MDN 的文档结构 + 阮一峰博客的个人风格，
             旨在打造一个分类清晰、搜索便捷的个人知识库。
           </p>

@@ -15,7 +15,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* 版权信息 */}
           <div className="text-sm text-muted-foreground">
-            © 2026 刘先生 | 记录所学，分析所思，沉淀所悟
+            © 2026 瘦小橘 | 记录所学，分析所思，沉淀所悟
           </div>
 
           {/* 站内导航 */}

@@ -1,0 +1,682 @@
+---
+title: HTML 常见面试题及使用问题总结
+description: HTML快速回忆
+date: 2026-06-11
+tags: [HTML]
+category: frontend/html
+order: 1
+---
+
+## 一、HTML 基础概念
+
+### HTML5 新增了哪些特性？
+
+| 类别 | 新增内容 |
+|------|---------|
+| 语义标签 | `<header>` `<footer>` `<nav>` `<main>` `<article>` `<section>` `<aside>` `<figure>` `<figcaption>` `<time>` `<mark>` |
+| 表单控件 | `type="email/url/date/range/color/search/tel/number"` |
+| 多媒体 | `<audio>` `<video>` `<source>` |
+| Canvas | `<canvas>` 2D 绘图 + WebGL |
+| 存储 | `localStorage` `sessionStorage` |
+| 离线 | Application Cache（已废弃，改用 Service Worker） |
+| 线程 | Web Worker / Shared Worker |
+| 通信 | WebSocket `postMessage` `EventSource` |
+| 其他 | `classList` `dataset` `data-*` 属性 `contentEditable` `drag` API |
+
+### 语义化标签有什么意义？
+
+```
+✅ 对开发者：代码可读性强，结构清晰，维护方便
+✅ 对 SEO：搜索引擎能更好理解页面结构，提升排名
+✅ 对无障碍：屏幕阅读器可按语义导航，提升可访问性
+✅ 对机器：爬虫、解析器、语音助手等能更准确提取内容
+```
+
+> 💡 **关键理解**：语义化 ≠ 不用 `<div>`，而是**该用语义标签的地方不用 div**，纯装饰/布局容器仍可用 div。
+
+### HTML 和 XHTML 的区别？
+
+| 对比项 | HTML | XHTML |
+|--------|------|-------|
+| 语法 | 宽松，标签可不闭合 | 严格 XML 规范，必须闭合 |
+| 大小写 | 不区分 | 标签和属性必须小写 |
+| 属性值 | 可不加引号 | 必须加引号 |
+| 嵌套 | 浏览器容错 | 严格正确嵌套 |
+| MIME | `text/html` | `application/xhtml+xml` |
+
+> ⚠️ 现代开发用 HTML5，XHTML 基本已退出历史舞台，但面试偶尔会问。
+
+---
+
+## 二、DOCTYPE 与渲染模式
+
+### DOCTYPE 的作用是什么？
+
+```html
+<!-- HTML5 标准写法 -->
+<!DOCTYPE html>
+```
+
+**作用**：告诉浏览器使用哪种文档类型定义（DTD）来解析页面。
+
+| DOCTYPE | 触发模式 |
+|---------|---------|
+| `<!DOCTYPE html>` | 标准模式（Standards Mode） |
+| 无 DOCTYPE 或旧版 DOCTYPE | 怪异模式（Quirks Mode） |
+
+> 💡 **面试追问**：两种模式的区别？
+> - **标准模式**：按 W3C 标准渲染，盒模型 `width = content`
+> - **怪异模式**：模拟旧浏览器行为，盒模型 `width = content + padding + border`
+
+### 如何检测当前是否为怪异模式？
+
+```javascript
+// 方法1
+console.log(document.compatMode); 
+// "CSS1Compat" = 标准模式, "BackCompat" = 怪异模式
+
+// 方法2：检测盒模型差异
+const div = document.createElement('div');
+div.style.width = '100px';
+div.style.padding = '10px';
+document.body.appendChild(div);
+console.log(div.offsetWidth); 
+// 标准模式: 120 | 怪异模式: 100
+document.body.removeChild(div);
+```
+
+---
+
+## 三、meta 标签与 SEO
+
+### 常用 meta 标签有哪些？
+
+```html
+<!-- 字符编码 -->
+<meta charset="UTF-8">
+
+<!-- 移动端适配（最常考） -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0">
+
+<!-- SEO 三件套 -->
+<meta name="description" content="页面描述，建议80-200字">
+<meta name="keywords" content="关键词1,关键词2,关键词3">
+<meta name="author" content="作者">
+
+<!-- 搜索引擎爬取 -->
+<meta name="robots" content="index, follow">
+<!-- noindex: 不索引 | nofollow: 不跟踪链接 | none: 都不 -->
+
+<!-- 强制IE使用最新渲染 -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<!-- 禁止手机号识别（移动端） -->
+<meta name="format-detection" content="telephone=no">
+
+<!-- iOS 全屏模式 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- 缓存控制 -->
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+```
+
+### viewport 的 width=device-width 到底做了什么？
+
+```
+没有 viewport meta：
+  - 移动浏览器默认视口宽度 980px（iPhone）
+  - 页面被缩小显示，字很小
+
+加了 width=device-width：
+  - 视口宽度 = 设备逻辑宽度（iPhone14 = 390px）
+  - 页面按1:1显示，不用缩放
+  - CSS 中的 100px = 屏幕上的 100px（逻辑像素）
+```
+
+> ⚠️ **易错点**：`width=device-width` 不等于响应式，只是让视口匹配设备宽度。响应式还需要媒体查询 + 弹性布局。
+
+---
+
+## 四、标签与属性
+
+### 块级元素 vs 行内元素 vs 行内块元素
+
+| 类型 | 特点 | 常见标签 |
+|------|------|---------|
+| **块级** | 独占一行、可设宽高、默认 `width:100%` | `div` `p` `h1~h6` `ul/ol/li` `table` `form` `header` `section` `article` |
+| **行内** | 同行排列、**不可设宽高**、宽高由内容撑开 | `span` `a` `strong` `em` `label` `code` `br` |
+| **行内块** | 同行排列、**可设宽高** | `img` `input` `button` `select` `textarea` |
+
+> ⚠️ **常见坑**：
+> - `<a>` 里不能嵌套 `<a>`（交互嵌套冲突）
+> - `<p>` 里不能嵌套块级元素（浏览器会自动拆分 `<p>`）
+> - 行内元素设置 `margin-top/bottom` 无效，设置 `padding-top/bottom` 视觉有效但不占空间
+
+### img 标签的 title 和 alt 有什么区别？
+
+| 属性 | 作用 | 何时显示 |
+|------|------|---------|
+| `alt` | 图片的**替代文本**，图片加载失败时显示 | 加载失败 + 屏幕阅读器读取 |
+| `title` | 图片的**提示信息**，鼠标悬停时显示 | 鼠标 hover |
+
+```html
+<!-- ✅ 推荐：alt 描述图片内容，不是"图片"二字 -->
+<img src="logo.png" alt="私房小厨Logo" title="点击返回首页">
+
+<!-- ❌ 错误 -->
+<img src="logo.png" alt="图片">
+<img src="logo.png">  <!-- 无障碍不友好 -->
+```
+
+> 💡 **面试追问**：alt 对 SEO 有影响吗？
+> 有。搜索引擎无法"看"图片，靠 alt 文本理解图片内容，是图片 SEO 的核心因素。
+
+### a 标签的 target 属性有哪些值？
+
+| 值 | 作用 |
+|----|------|
+| `_self` | 默认，当前窗口打开 |
+| `_blank` | 新窗口/标签页打开 |
+| `_parent` | 父框架中打开 |
+| `_top` | 整个窗口中打开（跳出所有框架） |
+| `framename` | 指定名称的框架中打开 |
+
+> ⚠️ **安全坑**：`target="_blank"` 存在 `window.opener` 钓鱼漏洞，新页面可通过 `window.opener.location` 重定向原页面。
+
+```html
+<!-- ✅ 安全写法：加 rel="noopener noreferrer" -->
+<a href="https://example.com" target="_blank" rel="noopener noreferrer">
+  外部链接
+</a>
+```
+
+### src 和 href 的区别？
+
+| 属性 | 含义 | 资源加载方式 | 示例 |
+|------|------|-------------|------|
+| `src` | 引入资源 | **会阻塞**页面解析（替换当前元素） | `<script src>` `<img src>` `<iframe src>` |
+| `href` | 建立链接 | **不阻塞**页面解析（建立引用关系） | `<link href>` `<a href>` |
+
+> 💡 **类比记忆**：src = "我需要这个东西才能继续"（同步），href = "我知道这个东西在哪"（异步引用）
+
+---
+
+## 五、script 标签
+
+### script 的 defer 和 async 有什么区别？
+
+```
+无属性：   HTML解析 → 遇到script → 暂停解析 → 下载 → 执行 → 继续解析
+defer：    HTML解析 → 遇到script → 后台下载 → 解析完成 → 按顺序执行
+async：    HTML解析 → 遇到script → 后台下载 → 下载完立即执行（阻塞解析）
+```
+
+| 对比项 | `defer` | `async` |
+|--------|---------|---------|
+| 下载时机 | 与 HTML 解析并行 | 与 HTML 解析并行 |
+| 执行时机 | DOM 解析完成后、`DOMContentLoaded` 前 | 下载完立即执行 |
+| 执行顺序 | **按书写顺序** | **谁先下载完谁先执行** |
+| DOM 访问 | ✅ 可访问 DOM | ❌ 不保证 DOM 已解析 |
+| 适用场景 | 需要操作 DOM 的脚本 | 独立脚本（统计、广告） |
+
+```html
+<!-- ✅ 常规推荐 -->
+<script src="app.js" defer></script>
+
+<!-- ✅ 第三方统计脚本 -->
+<script src="analytics.js" async></script>
+
+<!-- ❌ 不要同时用（async 优先级更高，defer 失效） -->
+<script src="app.js" defer async></script>
+```
+
+### 为什么建议把 script 放在 body 底部？
+
+```
+<head> 中的 script：
+  解析HTML → 遇到script → 停下来下载执行 → 白屏 → 继续解析
+  问题：首屏白屏时间长
+
+<body> 底部的 script：
+  解析HTML → 渲染出页面 → 下载执行script
+  优点：首屏内容先展示，用户感知更快
+```
+
+> 💡 **现代方案**：用 `defer` 放 `<head>` 中，效果等同放底部，且能更早开始下载。
+
+---
+
+## 六、表单与输入
+
+### input 类型有哪些？各有什么用途？
+
+| type | 用途 | 移动端键盘 |
+|------|------|-----------|
+| `text` | 普通文本 | 默认键盘 |
+| `email` | 邮箱 | 带@的键盘 |
+| `tel` | 电话号码 | 数字键盘 |
+| `url` | 网址 | 带URL快捷键 |
+| `number` | 数字 | 数字+符号键盘 |
+| `search` | 搜索 | 带搜索按钮 |
+| `date` | 日期 | 日期选择器 |
+| `range` | 范围滑块 | — |
+| `color` | 颜色选择 | 颜色选择器 |
+| `file` | 文件上传 | — |
+| `password` | 密码 | 默认键盘（隐藏字符） |
+| `checkbox` | 多选框 | — |
+| `radio` | 单选框 | — |
+
+> ⚠️ **移动端实战**：`type="tel"` 比 `type="number"` 更适合输入手机号，因为 number 有上下箭头且不允许空格。
+
+### 表单提交如何阻止默认行为？
+
+```html
+<!-- 方法1：onsubmit 返回 false -->
+<form onsubmit="return handleSubmit()">
+  <button type="submit">提交</button>
+</form>
+
+<!-- 方法2：event.preventDefault() -->
+<form id="myForm">
+  <button type="submit">提交</button>
+</form>
+
+<script>
+document.getElementById('myForm').addEventListener('submit', function(e) {
+  e.preventDefault(); // 阻止默认提交
+  // 自定义逻辑...
+});
+</script>
+```
+
+> ⚠️ **常见坑**：`<button>` 在 form 中默认 `type="submit"`，点击会触发表单提交。不想提交需显式写 `type="button"`。
+
+---
+
+## 七、HTML5 存储
+
+### cookie / localStorage / sessionStorage 的区别？
+
+| 对比项 | cookie | localStorage | sessionStorage |
+|--------|--------|-------------|----------------|
+| 容量 | 4KB | 5MB+ | 5MB+ |
+| 生命周期 | 可设过期时间 | 永久（手动清除） | 关闭标签页即清除 |
+| 请求携带 | ✅ 每次 HTTP 请求自动携带 | ❌ | ❌ |
+| 作用域 | 同源 + 路径 | 同源 | 同源 + 同标签页 |
+| API | `document.cookie`（字符串操作） | `setItem/getItem` | `setItem/getItem` |
+| 跨域 | 可设 `domain` 共享子域 | 不可 | 不可 |
+
+> 💡 **面试答题策略**：先说区别表格，再补充"选型建议"：
+> - 登录态 → cookie（自动携带）
+> - 用户偏好/主题 → localStorage（持久化）
+> - 临时表单数据/一次性状态 → sessionStorage（用完即走）
+
+### token 为什么一般存在 localStorage 而不是 cookie？
+
+```
+cookie 存 token：
+  ✅ 自动携带，方便
+  ❌ 容易被 CSRF 攻击（浏览器自动带 cookie）
+  ❌ 4KB 限制，JWT token 可能很长
+  ❌ 跨域需要额外配置
+
+localStorage 存 token：
+  ✅ 不自动携带，需手动放 header → 天然防 CSRF
+  ✅ 容量大（5MB+）
+  ✅ 跨域只需 header 加 Authorization
+  ❌ XSS 攻击可读取（但 cookie 也防不住 XSS）
+  ❌ 需手动管理刷新/过期
+```
+
+> ⚠️ **最佳实践**：Access Token 存 localStorage + 短过期，Refresh Token 存 HttpOnly Cookie + 长过期。
+
+---
+
+## 八、iframe
+
+### iframe 有哪些优缺点？
+
+| 优点 | 缺点 |
+|------|------|
+| 嵌入第三方内容（支付、地图） | 阻塞主页面的 `onload` 事件 |
+| 隔离样式和脚本（沙箱） | 搜索引擎无法索引 iframe 内容（SEO 不友好） |
+| 并行加载资源 | 主页面和 iframe 通信需 `postMessage` |
+| 历史记录独立 | 移动端体验差（缩放、滚动冲突） |
+
+### iframe 跨域通信怎么做？
+
+```javascript
+// ====== 父页面 ======
+const iframe = document.getElementById('child');
+iframe.contentWindow.postMessage(
+  { type: 'DATA_UPDATE', payload: { name: '红烧排骨' } },
+  'https://child-domain.com'  // ✅ 必须指定 origin，不要用 '*'
+);
+
+window.addEventListener('message', (e) => {
+  // ✅ 必须验证 origin
+  if (e.origin !== 'https://child-domain.com') return;
+  console.log('收到子页面消息:', e.data);
+});
+
+// ====== 子页面（iframe 内）======
+window.addEventListener('message', (e) => {
+  if (e.origin !== 'https://parent-domain.com') return;
+  console.log('收到父页面消息:', e.data);
+  
+  // 回复父页面
+  window.parent.postMessage(
+    { type: 'DATA_RECEIVED' },
+    'https://parent-domain.com'
+  );
+});
+```
+
+> ⚠️ **安全铁律**：`postMessage` 必须验证 `e.origin`，否则任何页面都能向你发消息。
+
+---
+
+## 九、浏览器渲染与性能
+
+### 从输入 URL 到页面展示的过程？
+
+```
+1. URL 解析 → 判断是搜索还是网址
+2. DNS 解析 → 域名 → IP（递归查询：浏览器缓存 → 系统缓存 → 路由器 → ISP → 根DNS）
+3. TCP 三次握手 → 建立连接
+4. TLS 握手（HTTPS）→ 协商加密
+5. 发送 HTTP 请求 → 请求行 + 请求头 + 请求体
+6. 服务器处理 → 返回 HTML
+7. 浏览器解析：
+   ├── HTML → DOM Tree
+   ├── CSS  → CSSOM Tree
+   └── DOM + CSSOM → Render Tree
+8. 布局（Layout/Reflow）→ 计算位置大小
+9. 绘制（Paint）→ 填充像素
+10. 合成（Composite）→ GPU 合成图层
+11. 执行 JS（遇到 script）
+```
+
+### 回流（Reflow）和重绘（Repaint）的区别？
+
+| | 回流（Reflow） | 重绘（Repaint） |
+|--|----------------|----------------|
+| **触发** | 几何属性变化（宽高、位置、margin、display） | 视觉属性变化（颜色、背景、阴影、visibility） |
+| **开销** | 🔴 **大**（重新计算布局） | 🟡 **小**（只重绘像素） |
+| **关系** | 回流**一定**触发重绘 | 重绘**不一定**触发回流 |
+
+```javascript
+// ❌ 触发回流的操作（避免在循环中）
+for (let i = 0; i < 100; i++) {
+  el.style.width = i + 'px';      // 每次都回流
+}
+
+// ✅ 批量修改（只触发一次回流）
+el.style.width = '100px';
+el.style.height = '200px';
+// 或者用 class 切换
+el.className = 'active';
+
+// ✅ 使用 transform 代替 top/left（GPU 合成，不触发回流）
+// ❌ el.style.left = '100px';
+// ✅ el.style.transform = 'translateX(100px)';
+
+// ✅ 读写分离（避免强制同步布局）
+// ❌ 强制回流
+const width = el.offsetWidth;  // 读 → 强制计算
+el.style.width = width + 10 + 'px';  // 写 → 再回流
+
+// ✅ 批量读，批量写
+const width = el.offsetWidth;
+const height = el.offsetHeight;
+el.style.width = width + 10 + 'px';
+el.style.height = height + 10 + 'px';
+```
+
+### 哪些属性会触发回流/重绘/合成？
+
+| 层级 | 属性 | 开销 |
+|------|------|------|
+| 🔴 回流 | `width` `height` `margin` `padding` `top` `left` `display` `font-size` `border-width` | 高 |
+| 🟡 重绘 | `color` `background` `box-shadow` `outline` `visibility` `text-decoration` | 中 |
+| 🟢 合成 | `transform` `opacity` `filter` `will-change` | 低 |
+
+> 💡 **核心原则**：动画优先用 `transform` + `opacity`，走 GPU 合成层，不触发回流。
+
+---
+
+## 十、HTML 可访问性（a11y）
+
+### 什么是无障碍（Accessibility）？怎么优化？
+
+```html
+<!-- ✅ 图片必须有 alt -->
+<img src="dish.jpg" alt="红烧排骨成品图">
+
+<!-- ✅ 表单必须有 label -->
+<label for="search">搜索菜名</label>
+<input id="search" type="text">
+
+<!-- ✅ 按钮有别于链接 -->
+<button type="button">添加收藏</button>
+<!-- ❌ 不要用 div 模拟按钮 -->
+<div onclick="addFavorite()">添加收藏</div>
+
+<!-- ✅ 使用语义化 landmark -->
+<nav aria-label="主导航">...</nav>
+<main>...</main>
+<footer>...</footer>
+
+<!-- ✅ ARIA 角色和状态 -->
+<button aria-pressed="false" aria-label="收藏">❤</button>
+<div role="alert" aria-live="polite">已保存到相册</div>
+
+<!-- ✅ 键盘可操作 -->
+<div tabindex="0" role="button" @keydown.enter="handleClick">
+  点击我
+</div>
+```
+
+---
+
+## 十一、常见实战问题
+
+### 移动端 1px 边框问题怎么解决？
+
+```
+原因：高清屏设备像素比（DPR）> 1
+  CSS 的 1px 在 2x 屏上实际占 2 个物理像素
+  所以看起来比设计师的 1px 粗
+```
+
+```css
+/* ✅ 方案1：伪元素 + transform（推荐） */
+.border-1px {
+  position: relative;
+}
+.border-1px::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: #e0e0e0;
+  transform: scaleY(0.5);
+  transform-origin: 0 0;
+}
+
+/* ✅ 方案2：viewport 缩放（适合全站统一） */
+<!-- 在 JS 中根据 DPR 动态设置 -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<!-- 2x 屏：scale=0.5，页面根元素 font-size 放大 2 倍 -->
+```
+
+### 移动端 300ms 点击延迟怎么解决？
+
+```
+原因：双击缩放手势 — 浏览器等 300ms 判断用户是否双击
+```
+
+```html
+<!-- ✅ 方案1：viewport 禁止缩放（最简单） -->
+<meta name="viewport" content="width=device-width, user-scalable=no">
+
+<!-- ✅ 方案2：CSS touch-action -->
+<style>
+  button, a { touch-action: manipulation; }
+</style>
+
+<!-- ✅ 方案3：FastClick 库（已不推荐，现代浏览器已原生解决） -->
+```
+
+> 💡 **现状**：现代浏览器设置了 `width=device-width` 后已自动消除 300ms 延迟。
+
+### HTML 中的 XSS 防范？
+
+```javascript
+// ❌ 直接插入用户输入 → XSS 漏洞
+el.innerHTML = userInput;
+
+// ✅ 方案1：textContent（纯文本）
+el.textContent = userInput;
+
+// ✅ 方案2：转义 HTML
+function escapeHTML(str) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return str.replace(/[&<>"']/g, c => map[c]);
+}
+el.innerHTML = escapeHTML(userInput);
+
+// ✅ 方案3：DOMPurify 库（处理富文本）
+import DOMPurify from 'dompurify';
+el.innerHTML = DOMPurify.sanitize(userInput);
+```
+
+### 为什么 `<img>` 下面会有空白间隙？怎么消除？
+
+```
+原因：img 是行内元素，默认基线对齐（baseline）
+  基线到行底有空间（留给 g, p, y 等字母的下半部分）
+  所以图片底部会有一小段空白
+```
+
+```css
+/* ✅ 方案1：改为块级元素 */
+img { display: block; }
+
+/* ✅ 方案2：修改对齐方式 */
+img { vertical-align: middle; }  /* 或 top / bottom */
+
+/* ✅ 方案3：行高为0 */
+.parent { line-height: 0; }
+
+/* ✅ 方案4：font-size: 0 */
+.parent { font-size: 0; }
+```
+
+### 如何实现图片懒加载？
+
+```html
+<!-- ✅ 方案1：IntersectionObserver（推荐） -->
+<img data-src="dish.jpg" alt="菜品" class="lazy">
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const img = entry.target;
+      img.src = img.dataset.src;
+      observer.unobserve(img);
+    }
+  });
+});
+document.querySelectorAll('.lazy').forEach(img => observer.observe(img));
+</script>
+
+<!-- ✅ 方案2：原生 loading="lazy"（最简单，现代浏览器支持） -->
+<img src="dish.jpg" alt="菜品" loading="lazy">
+
+<!-- ⚠️ 注意：loading="lazy" 对首屏图片不要用 -->
+<!-- 首屏图片应立即加载，否则会延迟渲染 -->
+```
+
+---
+
+## 十二、冷门但常考
+
+### HTML 中 id 和 class 的区别？
+
+| 对比项 | id | class |
+|--------|----|-------|
+| 唯一性 | 页面内**唯一** | 页面内可**重复** |
+| 选择器 | `#id` | `.class` |
+| 权重 | 高（0,1,0,0） | 低（0,0,1,0） |
+| JS 获取 | `getElementById` | `getElementsByClassName` |
+| 锚点 | `#id` 可做页面锚点 | 不可 |
+| 用途 | 唯一标识（表单、锚点、JS操作） | 样式复用、分组 |
+
+### data-* 属性的用法和限制？
+
+```html
+<!-- ✅ 存储自定义数据 -->
+<li data-dish-id="001" data-category="家常菜" data-level="1">
+  红烧排骨
+</li>
+
+<!-- JS 读取 -->
+const li = document.querySelector('li');
+console.log(li.dataset.dishId);    // "001"
+console.log(li.dataset.category);  // "家常菜"
+
+<!-- JS 设置 -->
+li.dataset.cookTime = '30min';
+
+<!-- ❌ 限制 -->
+<!-- 1. 不能存复杂对象（只支持字符串） -->
+el.dataset.info = JSON.stringify(obj); // 需要手动序列化
+
+<!-- 2. 属性名不能有大写（自动转小写） -->
+data-dishId → dataset.dishid  // ⚠️ 注意！
+
+<!-- 3. 不要用来存大量数据（HTML 膨胀） -->
+<!-- 4. 不要替代已有的 HTML 属性或 class -->
+```
+
+### pre 和 code 标签的区别？
+
+```html
+<!-- <pre>：保留原文格式（空格、换行、缩进） -->
+<pre>
+function hello() {
+    console.log("Hello");
+}
+</pre>
+
+<!-- <code>：标记代码片段（不保留格式） -->
+<p>使用 <code>console.log()</code> 输出日志</p>
+
+<!-- ✅ 组合使用：带格式的代码块 -->
+<pre><code>
+function hello() {
+    console.log("Hello");
+}
+</code></pre>
+```
+
+### HTML 实体字符有哪些常用的？
+
+| 字符 | 实体 | 用途 |
+|------|------|------|
+| `<` | `&lt;` | 小于号/标签开始 |
+| `>` | `&gt;` | 大于号/标签结束 |
+| `&` | `&amp;` | &符号（实体前缀） |
+| `"` | `&quot;` | 双引号 |
+| `'` | `&#39;` | 单引号 |
+| 空格 | `&nbsp;` | 不换行空格 |
+| `©` | `&copy;` | 版权符号 |
+| `®` | `&reg;` | 注册商标 |
+
+> ⚠️ **常见坑**：在 HTML 中写 `<` 或 `&` 不转义会被当作标签或实体解析，导致页面错乱。
