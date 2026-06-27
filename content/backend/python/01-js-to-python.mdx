@@ -1,0 +1,736 @@
+---
+title: JavaScript To Python
+description: 从JavaScript到Python：前端开发者极速入门
+date: 2026-06-22
+tags: [python, javascript]
+category: backend/python
+order: 1
+---
+
+# JavaScript To Python
+>作为一个前端开发者，已经掌握了js，学习Python不是从零开始，而是换一种语法表达你已经理解的概念。
+
+## 命名规范
+
+**相同点：**
+- 第一个字符必须以字母（a-z, A-Z）或下划线
+- 大小写敏感
+- 禁止使用保留关键字，如 if、for、class 等不能作为标识符。
+
+**不同点：**
+- Python 使用下划线分隔单词，如 snake_case而js使用驼峰命名法，如 camelCase
+
+|特性|JavaScript|Python|
+|:-------|:--------|:--------|
+|普通变量/函数|camelCase (小驼峰命名法)|snake_case (蛇形命名法)|
+|类名 (Class)|PascalCase (大驼峰)|PascalCase (大驼峰)|
+|常量 (Constant)|UPPER_SNAKE_CASE (常见)|UPPER_SNAKE_CASE|
+---
+
+## 代码风格
+
+|JavaScript|Python|
+|:-------|:--------|
+|花括号{}+分号;|缩进（4空格）+冒号:|
+
+```javascript
+if(true){
+    console.log('true');
+}else{
+    console.log('false');
+}
+```
+```python
+if True:
+    print ("True")
+else:
+    print ("False")
+
+#注意缩进数的空格数不一致，会导致运行错误
+# 多行语句
+# Python 通常是一行写完一条语句，但如果语句很长，我们可以使用反斜杠 \ 来实现多行语句，例如：
+item_one = 1
+item_two = 2
+item_three = 3
+total = item_one + \
+        item_two + \
+        item_three
+print(total) # 输出为 6
+```
+---
+
+## 注释
+** JavaScript **
+- 单行注释以 // 开头。
+- 多行注释以 /* 开始，以 */ 结尾。
+```JavaScript
+// 输出标题：
+document.getElementById("myH1").innerHTML="欢迎来到我的主页";
+/*
+下面的这些代码会输出
+一个标题和一个段落
+并将代表主页的开始
+*/
+document.getElementById("myH1").innerHTML="欢迎来到我的主页";
+document.getElementById("myP").innerHTML="这是我的第一个段落。";
+```
+** Python **
+- 单行注释以 # 开头
+- 多行字符串（由三个单引号 ''' 或三个双引号 """ 包围的文本块）可以用作多行注释。
+```python
+# 这是一个注释
+print("Hello, World!")
+'''
+这是多行注释，用三个单引号
+这是多行注释，用三个单引号
+这是多行注释，用三个单引号
+'''
+print("Hello, World!")
+
+"""
+这也是多行注释，用三个双引号
+这也是多行注释，用三个双引号
+这也是多行注释，用三个双引号
+"""
+# 多行注释是由三个单引号 ''' 或三个双引号 """ 来定义的，这种注释方式不能嵌套使用。
+```
+> ** 注意: **虽然多行字符串在这里被当作多行注释使用，但它实际上是一个字符串，我们只要不使用它，它不会影响程序的运行。
+>这些字符串在代码中可以被放置在一些位置，而不引起实际的执行，从而达到注释的效果。
+
+### Docstring 文档字符串
+Python 的 Docstring（文档字符串）是一种特殊的注释，用于为函数、类、模块等添加文档说明。与普通注释不同，Docstring 可以通过 __doc__ 属性直接访问，也可以使用 help() 函数查看。 
+Docstring 使用三个双引号 """ 或三个单引号 ''' 包围，放在函数、类、模块的开头。
+```python
+def add(a, b):
+    """返回两数之和"""
+    return a + b
+
+# 通过 __doc__ 属性访问
+print(add.__do c__)  # 输出: 返回两数之和
+
+# 使用 help() 函数
+help(add)
+'''Help on function add in module __main__:
+
+add(a, b)
+    返回两数之和
+'''
+```
+---
+
+## 变量与常量
+Python 中的变量不需要声明。每个变量在使用前都必须赋值，变量赋值以后该变量才会被创建。  
+等号 = 用来给变量赋值。等号左边是变量名，右边是存储在变量中的值。
+
+```javascript
+var name = "old"; // 函数作用域
+let age = 18; // 块集作用域，可变
+const PI = 3.14; // 块级作用域，不可变
+```
+```python
+# python 没有 var/let/const 的区别
+name = "old" # 就是变量，可变
+age = 18 #没有声明关键字直接赋值
+PI = 3.14 # 约定：全大写表示"别改我"，但语言层面不强制实际可以修改成功。全靠命名约定（全大写 MAX_SIZE）和开发者自觉。
+
+## 赋值
+counter = 100          # 整型变量
+miles   = 1000.0       # 浮点型变量
+name    = "runoob"     # 字符串
+boolean = True         # 布尔型变量
+# 多个变量赋值
+a = b = c = 1
+# 为多个变量同时指定不同的值
+a, b, c = 1, 2, "runoob"
+```
+> ** 易错点：** Python没有const，全大写命名只是约定，没有块级作用域，if里赋的值外面也能用。
+
+---
+
+## 数据类型
+>  核心差异：JS 只有 8 种类型（7 原始 + Object），Python 有丰富的内置类型体系。JS 的 number 一把梭，Python 拆成 int + float + complex；JS 的 Object 包打天下，Python 拆成 dict + tuple + set + 自定义类。
+
+|分类|JS|Python|关键差异|
+|:-------|:-------|:-------|:-------|
+|整数|number（IEEE 754 双精度）|int（任意精度）|JS 有精度上限，Python 无限大|
+|浮点型|number（同上）|float（IEEE 754 双精度）|浮点精度问题两者都有|
+|字符串|string|str|Python字符串用单双引号都可以，没有反引号模板字符串|
+|布尔|boolean|bool|Python是True/False（大写）表示|
+|空值|null + undefined|None|JS 有两个空值，Python 只有一个|
+|数组|Array|list|Python列表，方括号[1,2,3]|
+|对象/字典|Object|dict|Python字典，花括号\{"key": "value"}|
+|集合|Set| set|Python集合，花括号{1,2,3}（没有冒号区分dict）|
+|映射|Map|map|Python的dict就是有序的，不需要单独的Map
+|Symbol|Symbol|❌没有|——|
+|复数|❌ 没有|complex（内置）|Python 原生支持 3+4j
+
+```javascript
+// JS
+typeof 42          // "number"
+typeof "hello"     // "string"
+typeof true        // "boolean"
+typeof undefined   // "undefined"
+typeof null        // "object"  ← JS 的历史 bug
+```
+```python
+# Python
+type(42)           # <class 'int'>
+type("hello")      # <class 'str'>
+type(True)         # <class 'bool'>
+type(None)         # <class 'NoneType'>
+# 类型检查
+isinstance(42, int)    # True（推荐）
+type(42) is int        # True（严格判断）
+```
+
+## 运算符差异
+|操作|JS|Python|说明|
+|:-------|:-------|:-------|:-------|
+|整除|Math.floor(7/2)|7 // 2 → 3|Python 有专门的整除运算符
+|幂运算|2 ** 10|2 ** 10|这个一样！
+|严格等于|===|==|Python 默认就是严格比较！
+|松散等于|==|❌ 没有|Python 不存在类型强制转换比较
+|逻辑与|&&|and|——
+|逻辑或|`\|`\||\|——
+|逻辑非|!x|not x
+|自增|i++|❌ 没有|用 i += 1
+|三元表达式|x ? a : b|a if x else b|顺序反过来
+
+```python
+# 三元表达式对照
+# JS:  const result = score >= 60 ? "pass" : "fail"
+# PY:  result = "pass" if score >= 60 else "fail"
+
+# 逻辑运算符返回值（行为一致！）
+# JS:  "" || "default"  →  "default"
+# PY:  "" or "default"  →  "default"
+# JS:  "hello" && 42    →  42
+# PY:  "hello" and 42   →  42
+```
+## 字符串操作
+```javascript
+// JS 模板字符串
+const name = "大帅";
+const greeting = `你好，${name}！`; // 反引号 + ${}
+```
+```python
+# Python f-string（最推荐）
+name = "大帅"
+greeting = f"你好，{name}！" # f 前缀 + {} 变量
+
+# 其他格式化（了解即可）
+"你好，%s！" % name                          # 旧式
+"你好，{}！".format(name)                    # .format() 方法
+```
+|操作|JS|Python
+|:--------|:--------|:--------|
+|拼接|"a" + "b"|"a" + "b"
+|重复|"ha".repeat(3)|"ha" * 3 → "hahaha"
+|长度|str.length|len(str)
+|包含|str.includes("x")|"x" in str
+|切片|str.slice(1, 4)|str[1:4]
+|分割|str.split(",")|str.split(",")
+|合并|arr.join(",")|",".join(list) ⚠️
+|去空格|str.trim()|str.strip()
+|大写|str.toUpperCase()|str.upper()
+|小写|str.toLowerCase()|str.lower()
+|全部替换|str.replaceAll("a","b")|str.replace("a", "b")（默认全替换）
+
+>易错点：join 的调用者不同！JS 是 arr.join(",")，Python 是 ",".join(list)。
+
+## 数据结构对照
+### 数组 → 列表（list）
+```javascript
+// JS
+const arr = [1, 2, 3];
+arr.push(4);                        // 末尾添加
+arr.pop();                          // 末尾删除
+arr.map(x => x * 2);                // 映射
+arr.filter(x => x > 1);             // 过滤
+arr.reduce((s, x) => s + x, 0);     // 归约
+arr.find(x => x > 1);               // 查找元素
+arr.includes(2);                    // 是否包含
+arr.splice(1, 1);                   // 删除
+arr[1:3];                           // 切片
+[...arr, 4];                        // 展开追加
+```
+```python
+#Python
+arr = [1, 2, 3]
+arr.append(4)               # 末尾添加（= push）
+arr.pop()                   # 末尾删除
+
+# 映射/过滤 —— 列表推导式（最推荐）
+
+[x * 2 for x in arr]               # = map
+[x for x in arr if x > 1]          # = filter
+
+# 函数式写法（和 JS 几乎一样）
+
+list(map(lambda x: x * 2, arr))    # = map
+list(filter(lambda x: x > 1, arr)) # = filter
+
+# 归约
+
+from functools import reduce
+reduce(lambda s, x: s + x, arr, 0) # = reduce
+
+# 查找
+
+next((x for x in arr if x > 1), None)  # = find
+arr.index(2)    # 找索引（不存在会报错！）
+
+# 包含
+
+2 in arr        # = includes
+
+# 删除
+
+del arr[1]              # 删除索引1
+
+# 切片
+
+arr[1:3]                # = slice
+
+# 展开追加
+
+arr + [4]               # = [...arr, 4]
+```
+###  切片 —— Python 的超能力
+```python
+arr = [0, 1, 2, 3, 4, 5]
+arr[1:4]      # [1, 2, 3]       左闭右开
+arr[:3]       # [0, 1, 2]       从头到索引2
+arr[3:]       # [3, 4, 5]       从索引3到尾
+arr[-1]       # 5               最后一个（= JS 的 arr.at(-1)）
+arr[-2:]      # [4, 5]          最后两个
+arr[::2]      # [0, 2, 4]       步长2
+arr[::-1]     # [5, 4, 3, 2, 1, 0]  反转！
+arr[1:5:2]    # [1, 3]          从1到4，步长2
+```
+### 对象 → 字典（dict）
+```javascript
+// JS
+const obj = { name: "大帅", age: 25 };
+obj.name                     // 点语法
+obj["name"]                  // 方括号
+Object.keys(obj)             // 所有 key
+Object.values(obj)           // 所有 value
+Object.entries(obj)          // [key, value] 数组
+const { name } = obj;        // 解构
+const copy = { ...obj };     // 浅拷贝
+const merged = { ...obj, role: "dev" };
+delete obj["age"];           // 删除
+"name" in obj                // 包含 
+```
+```python
+# Python
+obj = {"name": "大帅", "age": 25}
+obj["name"]                  # 方括号（最常用）
+obj.get("name")              # 安全获取，不存在返回 None
+obj.get("name", "默认值")     # 带默认值
+obj.keys()                   # 所有 key
+obj.values()                 # 所有 value
+obj.items()                  # (key, value) 元组
+
+# 浅拷贝
+copy = obj.copy()            # 或 {**obj}
+
+# 合并
+merged = {**obj, "role": "dev"}   # = {...obj, role: "dev"}
+
+# 删除
+del obj["age"]
+
+# 包含
+"name" in obj                # 语法一样！
+
+```
+>易错点：Python 字典没有 . 点语法！obj.name 报错，必须 obj["name"]。
+
+### 元组（tuple）—— JS 没有的新类型
+```python
+# 不可变的列表，用圆括号
+point = (3, 4)
+x, y = point  # 解构（和 JS 数组解构一样）
+
+# 函数返回多个值（最常见用法）
+def get_user():    
+    return "大帅", 25
+name, age = get_user()        # 解构赋值
+
+```
+### 集合（set）
+```javascript
+const s = new Set([1, 2, 3]);
+s.add(4);
+s.has(2);        // true
+s.size;          // 3
+```
+```python
+s = {1, 2, 3}        # 直接字面量！比 JS 方便
+s.add(4)2 in s       # 用 in 代替 has
+s.discard(2)         # 删除（不存在不报错）
+len(s)               # 用 len() 代替 .size
+
+# 集合运算（Python 独有，非常强大）
+a = {1, 2, 3}
+b = {2, 3, 4}
+a & b                # {2, 3}  交集
+a | b                # {1, 2, 3, 4}  并集
+a - b                # {1}  差集
+a ^ b                # {1, 4}  对称差集
+```
+
+## 控制流
+### 条件判断
+```javaScript
+if (score >= 90) {
+    grade = "A";
+} else if (score >= 60) {
+    grade = "B";
+} else {
+    grade = "C";
+}
+```
+```python
+if score >= 90:
+    grade = "A"
+elif score >= 60:            # elif，不是 else if
+    grade = "B"
+else:
+    grade = "C"
+
+# Python 3.10+ 的 match/case（类似 switch）
+match command:
+    case "start":
+        print("启动")
+    case "stop":
+        print("停止")
+    case _:
+        print("未知命令")
+```
+### 循环
+```javascript
+for (let i = 0; i < 5; i++) { ... }       // 经典 for
+for (const item of arr) { ... }           // for...of
+arr.forEach((item, index) => { ... });    // forEach
+```
+```python
+for i in range(5):              # = for(let i=0; i<5; i++)
+    ...
+for item in arr:                # = for(const item of arr)
+    ...
+for index, item in enumerate(arr):   # = forEach 带索引 (推荐)
+       ...
+for key, value in obj.items():  # 同时取 key 和 value（推荐）
+    ...
+
+# range() 代替三段式 for
+range(5)          # 0, 1, 2, 3, 4
+range(2, 8)       # 2, 3, 4, 5, 6, 7
+range(0, 10, 2)   # 0, 2, 4, 6, 8
+```
+## 函数
+### 基本函数
+```javascript
+function greet(name) {
+    return `你好，${name}`; 
+}
+const add = (a, b) => a + b;                     // 箭头函数
+function fetch(url, method = "GET") { ... }      // 默认参数
+function sum(...nums) { 
+    return nums.reduce((a, b) => a + b, 0);
+} // 剩余参数
+```
+```python
+def greet(name):
+    return f"你好，{name}"
+
+add = lambda a, b: a + b       # 简单场景可用，但不推荐主流写法
+
+def fetch(url, method="GET"): ...    # 默认参数一样！
+
+def sum_nums(*nums):           # *args 收集位置参数
+    return sum(nums)           # Python 内置 sum()
+
+def func(**kwargs):            # 收集为字典
+    print(kwargs)              # {"name": "大帅", "age": 25}
+
+func(name="大帅", age=25)      # 直接传 key=value
+```
+### 关键字参数 —— Python 独有超能力
+```python
+def create_user(name, age, role):
+    ...
+
+# 以下调用方式全部合法！
+create_user("大帅", 25, "dev")            # 位置参数
+create_user(name="大帅", age=25, role="dev")  # 关键字参数 ⭐
+create_user(role="dev", name="大帅", age=25)  # 顺序随意 ⭐⭐
+
+# 强制关键字参数（JS 做不到）
+def search(*, keyword, limit=10):   # * 后面的必须用关键字传
+    ...
+
+search(keyword="Python")           # ✅
+search("Python")                    # ❌ 报错！
+```
+### 装饰器 —— Python 的高阶函数增强版
+```javascript
+// JS 高阶函数
+function log(fn) {
+    return function(...args) {
+        console.log(`调用 ${fn.name}`, args);
+        return fn(...args);
+    };
+}
+const add = log((a, b) => a + b);
+```
+```python
+# Python 装饰器 —— 语法糖，更优雅
+def log(fn):
+    def wrapper(*args, **kwargs):
+        print(f"调用 {fn.__name__}", args)
+        return fn(*args, **kwargs)
+    return wrapper
+@log                            # ← 装饰器语法！
+def add(a, b):
+    return a + b
+
+# 链式装饰
+# @log
+# @timer
+# @auth
+def handler(): ... # 从下往上：auth → timer → log
+```
+## 面向对象
+### 类定义
+```javascript
+class Animal {
+    constructor(name) { 
+        this.name = name; 
+    }
+    speak() { 
+        return `${this.name} makes a sound`; 
+    }
+    static info() { 
+        return "Animal class"; 
+    }
+}
+class Dog extends Animal {
+    constructor(name, breed) {
+        super(name);
+        this.breed = breed;
+    }
+    speak() { 
+        return `${this.name} barks`; 
+    }
+}
+```
+```python
+class Animal:
+    def __init__(self, name):         # = constructor
+        self.name = name              # this.name → self.name
+
+    def speak(self):                  # 显式 self！
+         return f"{self.name} makes a sound"
+
+    @staticmethod
+    def info():
+        return "Animal class"
+
+class Dog(Animal):                    # = extends
+    def __init__(self, name, breed):
+         super().__init__(name)        # = super(name)
+         self.breed = breed
+    def speak(self):                   # 重写（无 override 关键字）
+        return f"{self.name} barks"
+```
+### 关键差异
+|特性|JS|Python|
+|:-------|:-------|:-------|
+|this/self|隐式 this|显式 self（第一个参数）|
+|构造函数|constructor()|\__init__()|
+|继承|extends|class Child(Parent)|
+|私有|# 私有字段|_ 约定私有，__ 名称修饰|
+|属性|getter/setter|@property 装饰器|
+|多继承|❌|✅|
+```python
+ # @property —— Python 的 getter/setter
+class Circle:
+    def __init__(self, radius):
+        self._radius = radius
+    @property                          # getter
+    def radius(self):
+        return self._radius
+    @radius.setter                     # setter
+    def radius(self, value):
+        if value < 0:
+            raise ValueError("半径不能为负")
+        self._radius = value
+    @property
+    def area(self):                     # 只读计算属性
+        return 3.14159 * self._radius ** 2
+ ```
+ ## 模块与包管理
+ ```javascript
+ import React from "react";                          // 默认导入
+ import { useState } from "react";                   // 命名导入
+ export default function App() {}                    // 默认导出
+ export const PI = 3.14;                             // 命名导出
+ ```
+ ```python
+ import react                                 # 导入模块
+ from react import useState                   # 导入指定名称
+ import utils as u                            # 别名
+
+ # 导出：Python 没有 export 关键字！
+ # 所有顶层定义自动"可导出"，import 即可
+ # __init__.py —— 包的入口文件
+ # my_package/
+ #   __init__.py        ← 有这个文件，目录才算"包"
+ #   module_a.py
+ ```
+|操作|npm|pip|
+|:--------|:--------|:--------|
+|安装依赖|npm install axios|pip install requests
+|依赖清单|package.json|requirements.txt
+|锁定版本|package-lock.json|poetry.lock / uv.lock
+|虚拟环境|❌（用 nvm 管理 Node 版本）|python -m venv .venv ⭐
+
+>Python 必须用虚拟环境：python -m venv .venv → .venv\Scripts\activate（Windows）。相当于每个项目一个 node_modules。
+
+## 异步编程
+```javascript
+async function main() { 
+    const data = await fetchData();
+    const [users, posts] = await Promise.all([
+        fetchUsers(), fetchPosts()
+        ]);
+    }
+```
+```python
+# Python —— 语法几乎一样！
+async def main():
+    data = await fetch_data()
+    users, posts = await asyncio.gather(    # = Promise.all
+        fetch_users(), fetch_posts()
+    )
+asyncio.run(main())          # ⚠️ Python 需要显式运行事件循环！
+```
+|概念|JS|Python
+|:--------|:--------|:--------|
+|异步函数|async function|async def
+|等待结果|await|await
+|延时|setTimeout(() => {}, 1000)|await asyncio.sleep(1)
+|并发|Promise.all()|asyncio.gather()
+|任一完成|Promise.race()|asyncio.wait(return_when=FIRST_COMPLETED)
+|事件循环|自动运行|asyncio.run() ⚠️
+>关键差异：JS 的 async 函数直接调用就运行，Python 调用 async 函数只返回协程对象，必须 await 或 asyncio.run() 才真正执行。
+
+## 错误处理
+```javascript
+try { JSON.parse("invalid"); }
+catch (error) { console.error(error.message); }
+finally { cleanup(); }
+throw new Error("出错了");
+```
+```python
+try:
+    json.loads("invalid")
+except json.JSONDecodeError as e:     # 捕获特定类型
+    print(e)
+except Exception as e:                # 捕获所有
+    print(e)
+finally:
+    cleanup()
+raise ValueError("出错了")            # raise 代替 throw
+```
+|概念|JS|Python
+|:--------|:--------|:--------|
+|抛出|throw new Error("msg")|raise ValueError("msg")
+|捕获|catch(error)|except ErrorType as e
+|多类型|instanceof 判断|except (TypeError, ValueError) as e
+## 常用内置函数（JS 要装库，Python 自带）
+|需求|JS|Python（内置）
+|:--------|:--------|:--------|
+|绝对值|Math.abs(x)|abs(x)
+|最大值|Math.max(...arr)|max(arr)
+|求和|arr.reduce((a,b)=>a+b,0)|sum(arr)
+|排序|arr.sort((a,b)=>a-b)|sorted(arr)
+|枚举|手动 (v,i)=>...|enumerate(arr) ⭐
+|拉链|lodash _.zip|zip(a, b) ⭐
+|JSON|JSON.parse / JSON.stringify|json.loads / json.dumps
+|文件读写|fs.readFile|open("file").read()
+
+```python
+# enumerate 和 zip —— 两大利器
+fruits = ["apple", "banana", "cherry"]
+prices = [5, 3, 8]
+
+for i, fruit in enumerate(fruits):        # 同时拿索引和值
+    print(i, fruit)
+
+for fruit, price in zip(fruits, prices):  # 同时遍历两个列表
+    print(fruit, price)
+
+mapping = dict(zip(fruits, prices))       # 快速创建字典
+# {"apple": 5, "banana": 3, "cherry": 8}
+```
+## 列表推导式 —— 必须掌握的 Pythonic 写法
+JS 完全没有对应物，这是 Python 最强大的语法特性。
+```python
+# 基本形式：[表达式 for 变量 in 可迭代对象 if 条件]
+
+# 映射（= map）
+[x * 2 for x in range(5)]                    # [0, 2, 4, 6, 8]
+
+# 过滤（= filter）
+[x for x in range(10) if x % 2 == 0]         # [0, 2, 4, 6, 8]
+
+# 映射 + 过滤
+[x ** 2 for x in range(10) if x % 2 == 0]   # [0, 4, 16, 36, 64]
+
+# 嵌套循环（= flatMap）
+[(x, y) for x in range(3) for y in range(3)]
+
+# 字典推导式
+{name: len(name) for name in ["Python", "JS", "Go"]}
+# {"Python": 6, "JS": 2, "Go": 2}
+
+# 集合推导式
+{x % 3 for x in range(10)}                   # {0, 1, 2}
+
+# 三元表达式结合
+["even" if x % 2 == 0 else "odd" for x in range(5)]
+
+```
+## 文件操作
+```javascript
+// JS —— Node.js
+const fs = require("fs");
+const content = fs.readFileSync("data.txt", "utf-8");
+```
+```python
+# Python —— 超级简单
+with open("data.txt", "r", encoding="utf-8") as f:    # with = 自动关闭
+    content = f.read()
+with open("output.txt", "w", encoding="utf-8") as f:
+    f.write("hello")
+# 逐行读（大文件推荐）
+with open("data.txt") as f:
+    for line in f:      # 直接迭代文件对象！
+        print(line.strip()) 
+```
+## 避坑指南 —— JS 开发者最常踩的 10 个坑
+1. 缩进是语法：混用 Tab 和空格报 IndentationError，统一用 4 空格
+2. **没有 ++/--**：i++ 是语法错误，用 i += 1
+3. 字典没有点语法：obj.name 报错，必须 obj["name"]
+4. **True/False/None 大写**：小写报 NameError
+5. **and/or/not**：不能用 &&/||/!
+6. **elif 不是 else if**：一个词，中间没空格
+7. **range 不含终点**：range(5) 是 0-4，和 for(i=0;i< 5;i++) 一致
+8. **整除用 //**：7/2 是 3.5，7//2 才是 3
+9. **self 必须显式写**：类方法第一个参数永远是 self
+10. **asyncio.run() 别忘**：async 函数不会自动执行

@@ -1,0 +1,323 @@
+---
+title: Java 包、类、对象
+description: Java 包、类、对象
+date: 2026-06-10
+tags: [java]
+category: backend/java
+order: 2
+---
+
+# Java 包、类、对象
+> 在 Java 中，包（Package） 是组织类、接口和子目录的机制，类似于操作系统中的文件夹。它是 Java 语言架构的核心组成部分，主要用于解决命名冲突、控制访问权限以及管理大型项目结构。
+
+## 包的主要作用
+1. 避免命名冲突 
+- 这是包最直观的作用。在没有包的情况下，如果两个开发者都定义了一个名为 User 的类，编译器将无法区分它们。
+- 通过包机制，可以将类限定在不同的命名空间中： 
+> com.company.hr.User  
+com.company.sales.User  
+即使类名相同，只要包名不同，它们在 JVM 中就是完全独立的两个类。
+2. 控制访问权限
+- 当一个类、方法或字段没有显式指定修饰符时（即使用默认修饰符），它只能在同一个包内被访问。
+- 这使得包成为一种封装单元，允许开发者将内部实现细节隐藏在同包的其他类中，而不对外部暴露。
+3. 代码组织与维护
+- 在大型项目中，成百上千个类如果不进行分类，将难以维护。包允许开发者按照功能模块（如 util, dao, service, controller）对代码进行逻辑分组，使项目结构清晰，便于团队协作和查找。
+## 包的命名规范
+- 全小写：包名中的所有字母必须是小写（例如：com.example.myapp，严禁出现 Com.Example）。
+- 点号分隔：使用英文句点 . 作为层级分隔符。
+- 唯一性前缀：通常使用反向域名作为包名的开头，以确保全球唯一性。
+    - 格式：顶级域名。公司/组织名。项目名。模块名...
+    - 示例：如果你拥有域名 example.com，你的包名应以 com.example 开头。
+- 禁止使用的名称:
+    - 不要使用 Java 标准库的包名（如 java.lang, java.util），这会导致严重的类加载冲突和安全问题。
+    - 避免使用保留字或包含特殊字符。
+## 包的使用方式
+1. 声明包
+- 在每个 Java 源文件（.java）的第一行非注释代码处，使用 package 关键字声明该类所属的包。
+```java
+// 文件路径必须是：src/com/example/service/UserService.java
+package com.example.service;
+
+public class UserService {
+    public void createUser() {
+        // ...
+    }
+}
+```
+
+> 注意：物理文件目录结构必须与包名完全一致。如果包名是 com.example.service，那么文件必须位于 com/example/service/ 目录下。  
+
+2. 导入包
+
+要在当前类中使用其他包中的类，需要使用 import 关键字。
+```java
+     // 导入单个类（推荐，清晰明确）
+      import java.util.ArrayList;
+      import com.example.service.UserService;
+
+      public class Main {
+        public static void main(String[] args) {
+        ArrayList<String> list = new ArrayList<>();
+        UserService service = new UserService();
+      }
+     }
+     
+     // 导入整个包（使用通配符 *）
+      import java.util.*; 
+      // 可以使用 ArrayList, HashMap, List 等，但不能直接使用 java.util.regex.Pattern
+     
+     //静态导入 (Static Import)
+      import static java.lang.Math.PI;
+      import static java.lang.System.out;
+
+      public class Calc {
+        public void printPi() {
+          out.println(PI); //  直接访问，无需写 Math.PI 或 System.out
+        }
+      }
+     
+     //不使用 import 的情况
+      public class Main {
+        public static void main(String[] args) {
+          java.util.Scanner scanner = new java.util.Scanner(System.in);
+        }
+      }
+```
+## 类
+类是一个模板或蓝图。它描述了一组具有相同属性（数据）和行为（方法）的事物。
+- 它本身不是真实存在的数据，而是一种抽象的定义。
+- 在代码中，类定义了对象长什么样（成员变量）以及能做什么（成员方法）。
+- 代码示例： 定义一个 Car（汽车）类，规定所有汽车都有品牌和颜色，都能行驶。
+```java
+// 定义一个类
+public class Car {
+    // 1. 属性（成员变量）：描述事物的特征
+    String brand;  // 品牌
+    String color;  // 颜色
+
+    // 2. 行为（成员方法）：描述事物能做什么
+    public void drive() {
+        System.out.println(brand + " 正在行驶...");
+    }
+    
+    public void honk() {
+        System.out.println("滴滴！");
+    }
+}
+```
+一个类可以包含以下类型变量：
+- 局部变量：在方法、构造方法或者语句块中定义的变量被称为局部变量。变量声明和初始化都是在方法中，方法结束后，变量就会自动销毁。
+- 成员变量：成员变量是定义在类中，方法体之外的变量。这种变量在创建对象的时候实例化。成员变量可以被类中方法、构造方法和特定类的语句块访问。
+- 类变量：类变量也声明在类中，方法体之外，但必须声明为 static 类型。
+## 对象
+对象是类的实例（Instance）。它是根据类这个模板创建出来的、真实存在于内存中的实体。
+- 只有创建了对象，程序才能真正使用这些数据和方法。
+- 同一个类可以创建无数个对象，每个对象拥有自己独立的属性值（例如：一辆红色的宝马，一辆黑色的特斯拉）。
+- 代码示例：根据上面的 Car 类，创建两个具体的汽车对象。
+```java
+public class Main {
+    public static void main(String[] args) {
+        // 创建对象 (实例化)
+        // 语法：类名 对象名 = new 类名();
+        
+        Car car1 = new Car(); 
+        car1.brand = "BMW";
+        car1.color = "红色";
+
+        Car car2 = new Car();
+        car2.brand = "Tesla";
+        car2.color = "黑色";
+
+        // 调用对象的方法
+        car1.drive(); // 输出：BMW 正在行驶...
+        car2.drive(); // 输出：Tesla 正在行驶...
+        
+        // 修改某个对象的属性不会影响另一个
+        car1.color = "蓝色"; 
+        System.out.println("car1 现在是：" + car1.color); // 蓝色
+        System.out.println("car2 还是：" + car2.color);   // 黑色
+    }
+}
+```
+## 构造方法
+在 Java 中，构造方法（Constructor）是用于创建类的对象的特殊方法。<br/>
+当使用 new 关键字创建对象时，构造方法会自动调用，用来初始化对象的属性。<br/>
+每个类都有构造方法。如果没有显式地为类定义构造方法，Java 编译器将会为该类提供一个默认构造方法。
+在创建一个对象的时候，至少要调用一个构造方法。构造方法的名称必须与类同名，一个类可以有多个构造方法。
+下面是一个构造方法示例：
+```java
+public class Puppy{
+    public Puppy(){
+    }
+ 
+    public Puppy(String name){
+        // 这个构造器仅有一个参数：name
+    }
+}
+
+```
+### 构造方法具有以下几个特点：
+- 与类名相同：构造方法的名称必须与类名完全一致，包括大小写。这是构造方法的一个基本要求。
+- 没有返回类型：构造方法没有返回类型声明，即使是 void 也不写。这使得它与普通方法区分开来。
+- 自动调用：每次使用 new 创建对象时，构造方法会自动调用，以初始化对象的属性和状态。
+- 不能直接调用：构造方法只能通过 new 关键字在创建对象时调用，不能像普通方法那样直接调用。
+- 支持重载：可以为一个类定义多个构造方法，只要它们的参数列表不同。通过重载，可以创建不同的构造方法以适应不同的初始化需求。
+- 默认构造方法：如果没有定义任何构造方法，Java 会提供一个无参的默认构造方法。但一旦定义了任何其他构造方法，Java 不再提供默认构造方法。
+- this 关键字的使用：在构造方法中可以使用 this 来引用当前对象的属性、方法，或调用另一个构造方法（必须是构造方法的第一行），以避免重复代码。
+- 不能被继承，但可以被调用：构造方法不能被子类继承，但子类可以使用 super() 来调用父类的构造方法，以便初始化继承的属性。
+- 对象初始化保障：构造方法的主要作用是初始化对象的属性和状态，保证对象在创建时处于一个合法的初始状态。
+
+### 构造方法的作用：
+- 初始化对象属性：构造方法的主要作用是为对象的属性赋初值。
+- 保证对象初始化的完整性：在构造方法中可以设置默认值或必要参数，从而避免对象未完全初始化的问题。
+### 构造方法的类型
+Java 中的构造方法分为两种类型：无参构造方法和有参构造方法。
+1. 无参构造方法（默认构造方法）
+
+   如果一个类中没有定义任何构造方法，Java 会默认提供一个无参构造方法。例如：
+    - 在没有显式定义构造方法时，Java 自动提供一个默认的无参构造方法。
+    -  一旦定义了其他构造方法，Java 将不再提供默认构造方法。
+```java
+public class Person {
+    public Person() {
+        System.out.println("Person对象已创建");
+    }
+}
+```
+2. 有参构造方法
+
+可以定义带有参数的构造方法，用来在创建对象时为属性赋值：
+```java
+public class Person {
+    String name;
+    int age;
+
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+// 调用有参构造方法时，可以为对象的属性进行初始化：
+Person p = new Person("Alice", 25);
+```
+### 构造方法的重载
+Java 支持构造方法的重载，即可以在同一个类中定义多个构造方法，只要参数列表不同即可。例如：
+```java
+public class Person {
+    String name;
+    int age;
+
+    public Person() {
+        this.name = "Unknown";
+        this.age = 0;
+    }
+
+    public Person(String name) {
+        this.name = name;
+        this.age = 0;
+    }
+
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+//创建对象时，Java 会根据传入的参数数量和类型自动选择匹配的构造方法：
+Person p1 = new Person(); // 调用无参构造方法
+Person p2 = new Person("Alice"); // 调用单参数构造方法
+Person p3 = new Person("Bob", 30); // 调用双参数构造方法
+```
+## 创建对象
+对象是根据类创建的。在Java中，使用关键字 new 来创建一个新的对象。创建对象需要以下三步：
+- 声明：声明一个对象，包括对象名称和对象类型。
+- 实例化：使用关键字 new 来创建一个对象。
+- 初始化：使用 new 创建对象时，会调用构造方法初始化对象。
+- 下面是一个创建对象的例子：
+```java
+public class Puppy{
+   public Puppy(String name){
+      //这个构造器仅有一个参数：name
+      System.out.println("小狗的名字是 : " + name ); 
+   }
+   public static void main(String[] args){
+      // 下面的语句将创建一个Puppy对象
+      Puppy myPuppy = new Puppy( "tommy" );
+   }
+}
+```
+### 构造方法中的 this 关键字
+在构造方法中，this 关键字通常用于两种情况：
+1. 引用当前对象的属性或方法：当构造方法的参数名与类属性名相同时，使用 this 来区分类属性和参数。例如：
+```java
+public Person(String name, int age) {
+    this.name = name; // this.name 表示类的属性
+    this.age = age;
+}
+```
+2. 调用另一个构造方法：可以使用 this() 调用当前类的其他构造方法，常用于避免重复代码，但必须放在构造方法的第一行。
+```java
+public Person(String name) {
+    this(name, 0); // 调用另一个双参数的构造方法
+}
+
+public Person(String name, int age) {
+    this.name = name;
+    this.age = age;
+}
+```
+## 访问实例变量和方法
+通过已创建的对象来访问成员变量和成员方法，如下所示：
+```java
+/* 实例化对象 */
+Object referenceVariable = new Constructor();
+/* 访问类中的变量 */
+referenceVariable.variableName;
+/* 访问类中的方法 */
+referenceVariable.methodName();
+```
+使用 Object 类型声明变量只能在编译时访问 Object 类中的方法和属性，但在运行时，你可以通过强制类型转换将其转换为特定类型，以便访问特定类型的方法和属性。
+## 实例
+下面的例子展示如何访问实例变量和调用成员方法：
+```java
+public class Puppy {
+    private int age;
+    private String name;
+ 
+    // 构造器
+    public Puppy(String name) {
+        this.name = name;
+        System.out.println("小狗的名字是 : " + name);
+    }
+ 
+    // 设置 age 的值
+    public void setAge(int age) {
+        this.age = age;
+    }
+ 
+    // 获取 age 的值
+    public int getAge() {
+        return age;
+    }
+ 
+    // 获取 name 的值
+    public String getName() {
+        return name;
+    }
+ 
+    // 主方法
+    public static void main(String[] args) {
+        // 创建对象
+        Puppy myPuppy = new Puppy("Tommy");
+ 
+        // 通过方法来设定 age
+        myPuppy.setAge(2);
+ 
+        // 调用另一个方法获取 age
+        int age = myPuppy.getAge();
+        System.out.println("小狗的年龄为 : " + age);
+
+        // 也可以直接访问成员变量（通过 getter 方法）
+        System.out.println("变量值 : " + myPuppy.getAge());
+    }
+}
+```

@@ -1,0 +1,171 @@
+---
+title: Java 运算符
+description: Java 算术运算符、关系运算符、位运算符、逻辑运算符、赋值运算符
+date: 2026-06-11
+tags: [java]
+category: backend/java
+order: 5
+---
+# Java 运算符
+计算机的最基本用途之一就是执行数学运算，作为一门计算机语言，Java也提供了一套丰富的运算符来操纵变量。我们可以把运算符分成以下几组：
+- 算术运算符
+- 关系运算符
+- 位运算符
+- 逻辑运算符
+- 赋值运算符
+- 其他运算符
+
+ ## 算术运算符
+算术运算符用在数学表达式中，它们的作用和在数学中的作用一样。
+
+| 操作符 | 描述           |
+|:----|:-------------|
+| +   | 加法           |
+| -   | 减法           |
+| *   | 乘法           |
+| /   | 除法           |
+| %   | 取余           |
+| ++  | 自增: 操作数的值增加1 |
+| --  | 自减: 操作数的值减少1 |
+```java
+public class Test {
+ 
+  public static void main(String[] args) {
+     int a = 10;
+     int b = 20;
+     int c = 25;
+     int d = 25;
+     System.out.println("a + b = " + (a + b) );
+     System.out.println("a - b = " + (a - b) );
+     System.out.println("a * b = " + (a * b) );
+     System.out.println("b / a = " + (b / a) );
+     System.out.println("b % a = " + (b % a) );
+     System.out.println("c % a = " + (c % a) );
+     System.out.println("a++   = " +  (a++) );
+     System.out.println("a--   = " +  (a--) );
+     // 查看  d++ 与 ++d 的不同
+     System.out.println("d++   = " +  (d++) );
+     System.out.println("++d   = " +  (++d) );
+  }
+}
+// a + b = 30
+// a - b = -10
+// a * b = 200
+// b / a = 2
+// b % a = 0
+// c % a = 5
+// a++   = 10
+// a--   = 11
+// d++   = 25
+// ++d   = 27
+```
+### 自增自减运算符
+1. 自增（++）自减（--）运算符是一种特殊的算术运算符，在算术运算符中需要两个操作数来进行运算，而自增自减运算符是一个操作数。
+```java
+public class Test{
+    public static void main(String[] args){
+        int a = 3;//定义一个变量；
+        int b = ++a;//自增运算
+        int c = 3;
+        int d = --c;//自减运算
+        System.out.println("进行自增运算后的值等于"+b);
+        System.out.println("进行自减运算后的值等于"+d);
+    }
+}
+// 进行自增运算后的值等于4
+// 进行自减运算后的值等于2
+```
+2. 前缀自增自减法(++a,--a): 先进行自增或者自减运算，再进行表达式运算。
+3. 后缀自增自减法(a++,a--): 先进行表达式运算，再进行自增或者自减运算。
+```java
+public class Test{
+    public static void main(String[] args){
+        int a = 5;//定义一个变量；
+        int b = 5;
+        int x = 2*++a;
+        int y = 2*b++;
+        System.out.println("自增运算符前缀运算后a="+a+",x="+x);
+        System.out.println("自增运算符后缀运算后b="+b+",y="+y);
+    }
+}
+// 自增运算符前缀运算后a=6，x=12
+// 自增运算符后缀运算后b=6，y=10
+```
+## 关系运算符
+| 操作符 | 描述   |
+|:----|:-----|
+| ==  | 等于   |
+| !=  | 不等   |
+| >   | 大于   |
+| \<   | 小于   |
+| >=  | 大于等于 |
+| \<=  | 小于等于 |
+```java
+public class Test {
+ 
+  public static void main(String[] args) {
+     int a = 10;
+     int b = 20;
+     System.out.println("a == b = " + (a == b) );
+     System.out.println("a != b = " + (a != b) );
+     System.out.println("a > b = " + (a > b) );
+     System.out.println("a < b = " + (a < b) );
+     System.out.println("b >= a = " + (b >= a) );
+     System.out.println("b <= a = " + (b <= a) );
+  }
+}
+// a == b = false
+// a != b = true
+// a > b = false
+// a < b = true
+// b >= a = true
+// b <= a = false
+```
+## 逻辑运算符
+| 操作符  | 描述  |
+|:-----|:----|
+| &&   | 与   |
+| \|\| | 或   |
+| !    | 非   |
+```java
+public class Test {
+  public static void main(String[] args) {
+     boolean a = true;
+     boolean b = false;
+     System.out.println("a && b = " + (a&&b));
+     System.out.println("a || b = " + (a||b) );
+     System.out.println("!(a && b) = " + !(a && b));
+  }
+}
+// a && b = false
+// a || b = true
+// !(a && b) = true
+```
+## 赋值运算符
+| 操作符  | 描述  |
+|:-----|:----|
+|=|将右操作数的值赋给左侧操作数|
+|+=|把左操作数和右操作数相加赋值给左操作数|
+|-=|把左操作数和右操作数相减赋值给左操作数|
+|*=|把左操作数和右操作数相乘赋值给左操作数|
+|/=|把左操作数和右操作数相除赋值给左操作数|
+
+## 条件运算符（三目运算）
+条件运算符也被称为三元运算符。该运算符有3个操作数，并且需要判断布尔表达式的值。该运算符的主要是决定哪个值应该赋值给变量。
+```java
+public class Test {
+   public static void main(String[] args){
+      int a , b;
+      a = 10;
+      // 如果 a 等于 1 成立，则设置 b 为 20，否则为 30
+      b = (a == 1) ? 20 : 30;
+      System.out.println( "Value of b is : " +  b );
+ 
+      // 如果 a 等于 10 成立，则设置 b 为 20，否则为 30
+      b = (a == 10) ? 20 : 30;
+      System.out.println( "Value of b is : " + b );
+   }
+}
+// Value of b is : 30
+// Value of b is : 20
+```

@@ -1,0 +1,97 @@
+---
+title: js 总结
+description: js个人知识点总结
+date: 2026-06-21
+tags: [JavaScript]
+category: frontend/javascript
+order: 1
+---
+# javaScript 个人知识点总结
+
+## 什么是原型，原型链
+每一个构造函数中都有一个原型对象(prototype)，每一个原型对象中有一个内部的指针constructor指向他的构造函数，每一个实例都有一个__proto__指向原型对象。
+```javaScript
+function Person(name,age){
+  this.name = name
+  this.age = age
+}
+var person = new Person()
+Person.prototype === person._proto_ // true
+Person.prototype.constructor === Person // true
+Person._proto_ === Function.prototype // true
+
+function Person() {
+
+}
+
+var person = new Person();
+console.log(person.__proto__ == Person.prototype) // true
+console.log(Person.prototype.constructor == Person) // true
+```
+当我们访问一个对象的属性时，如果这个对象内部不存在这个属性，那么他就会去prototype里找这个属性，这个prototype又会有自己的prototype，于是就这样一直找下去，也就是我们平时所说的原型链的概念。
+### new操作符都干了什么
+1. 创建一个新的对象obj
+2. 将对象与构建函数通过原型链连接起来
+3. 将构建函数中的this绑定到新建的对象obj上
+4. 根据构建函数返回类型作判断，如果是原始值则被忽略，如果是返回对象，需要正常处理
+```javaScript
+function mynew(Func, ...args) {
+// 1.创建一个新对象
+const obj = {}
+// 2.新对象原型指向构造函数原型对象
+obj.proto = Func.prototype
+// 3.将构建函数的this指向新对象
+let result = Func.apply(obj, args)
+// 4.根据返回值判断
+return result instanceof Object ? result : obj
+}
+```
+### 继承
+#### 原型链继承(prototype)
+``Child.prototype = new Parent();//通过prototype继承parent方法和数据``
+```javaScript
+// 构造函数
+function Parent(){
+    // 父亲 财产 1000
+    this.property =1000;
+}
+// 父构造函数上获取财产的方法
+Parent.prototype.getSuperValue = function(){
+    return this.property;
+}
+// 构造函数（子）
+function Child(){
+    // 子 财产 10
+    this.subProperty = 10;
+}
+// 继承 Parent
+Child.prototype = new Parent();
+Child.prototype.getSupValue = function(){
+    return this.subProperty;
+}
+let childInstance = new Child();
+let parentInstance = new Parent();
+console.log(childInstance.getSuperValue()); // 1000
+console.log(childInstance.getSupValue()); // 10
+console.log(parentInstance.getSuperValue()); // 1000
+```
+**优点：** 继承了父类的模板，又继承了父类的原型对象。  
+**缺点：**  
+1. 这种写法会导致原型覆盖也就是找不到继承前的原型链上的方法，所以要先继承再写子原型上的方法  
+```javaScript
+// 构造函数（子）
+function Child(){
+    // 子 财产 10
+    this.subProperty = 10;
+}
+Child.prototype.getSupValue = function(){
+    return this.subProperty;
+}
+// 继承 Parent
+Child.prototype = new Parent();
+
+// 这种写法运行会报错
+
+
+```
+2. 来自原型对象的所有属性都被共享了，这样如果不小心修改了原型对象中的引用类型属性，那么所有子类创建的实例对象都会受到影响
