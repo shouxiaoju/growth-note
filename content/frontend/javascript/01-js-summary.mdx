@@ -1,5 +1,5 @@
 ---
-title: js 总结
+title: js 总结日常
 description: js个人知识点总结
 date: 2026-06-21
 tags: [JavaScript]
@@ -29,7 +29,8 @@ console.log(person.__proto__ == Person.prototype) // true
 console.log(Person.prototype.constructor == Person) // true
 ```
 当我们访问一个对象的属性时，如果这个对象内部不存在这个属性，那么他就会去prototype里找这个属性，这个prototype又会有自己的prototype，于是就这样一直找下去，也就是我们平时所说的原型链的概念。
-### new操作符都干了什么
+
+## new操作符都干了什么
 1. 创建一个新的对象obj
 2. 将对象与构建函数通过原型链连接起来
 3. 将构建函数中的this绑定到新建的对象obj上
@@ -46,8 +47,8 @@ let result = Func.apply(obj, args)
 return result instanceof Object ? result : obj
 }
 ```
-### 继承
-#### 原型链继承(prototype)
+## 继承
+### 原型链继承(prototype)
 ``Child.prototype = new Parent();//通过prototype继承parent方法和数据``
 ```javaScript
 // 构造函数
@@ -90,8 +91,837 @@ Child.prototype.getSupValue = function(){
 // 继承 Parent
 Child.prototype = new Parent();
 
-// 这种写法运行会报错
-
+// 这种写法运行会报错TypeError: childInstance.getSupValue is not a function
 
 ```
-2. 来自原型对象的所有属性都被共享了，这样如果不小心修改了原型对象中的引用类型属性，那么所有子类创建的实例对象都会受到影响
+2. 来自原型对象的所有属性都被共享了，这样如果不小心修改了原型对象中的**引用类型**属性，那么所有子类创建的实例对象都会受到影响
+```javaScript
+function Parent(){
+    this.name = '父亲'
+    this.list =[1,2];
+}
+
+// 构造函数（子）
+function Child(){
+
+}
+
+// 继承 Parent
+Child.prototype = new Parent();
+
+
+let childInstance = new Child();
+let parentInstance = new Parent();
+
+childInstance.property =  0;
+childInstance.name = '孩子'
+childInstance.list.push(3);
+
+let childInstance_2= new Child();
+
+console.log(childInstance.name); // 孩子
+console.log(childInstance_2.name); // 父亲
+console.log(childInstance.list); // [1,2,3]
+console.log(childInstance.list); // [1,2,3]
+
+```
+
+### 构造函数继承
+
+```javaScript
+function Parent(name, age){
+    this.name = name;
+    this.age = age;
+    this.list=[1,2]
+}
+
+function Child(name, age){
+    Parent.call(this, name, age);
+}
+
+const child = new Child('张三', 18);
+child.list.push(3);
+
+const child_2 = new Child("李四", 20)
+
+console.log(child.name)     // 张三
+console.log(child.age)      // 18
+console.log(child.list)     // [1,2,3]
+console.log(child_2.name)   // 李四
+console.log(child_2.age)    // 20
+console.log(child_2.list)   // [1,2]
+```
+
+**优点：**
+1. 创建子类实例时，可以向父类传递参数  
+2. 解决了原型链继承中子类实例共享父类引用对象的问题
+
+**缺点：**
+构造函数继承只能继承父类的实例属性和方法，不能继承父类原型的属性和方法
+```javaScript
+function Parent(name){
+    this.name = name;
+}
+
+Parent.prototype.getName=function(){
+    return this.name;
+}
+
+function Child(){
+    this.age = 18;
+    Parent.call(this, '父亲');
+}
+
+Child.prototype.getAge=function(){
+    return this.age;
+}
+
+const child = new Child();
+
+console.log(child.name)     // 张三
+console.log(child.age)      // 18
+console.log(child.getAge()) // 18
+//console.log(child.getName())   // child.getName is not a function
+
+```
+### 组合继承（原型链继承+构造函数继承）
+使用原型链继承来保证子类能继承到父类原型中的属性和方法使用构造继承来保证子类能继承到父类的实例属性和方法
+```javaScript
+function Parent(name, list){
+    this.name = name;
+    this.list = list;
+}
+Parent.prototype.age = 20;
+
+function Child(name, list){
+    this.sex = 'boy'
+    Parent.apply(this, [
+        name,
+        list
+    ])
+}
+
+Child.prototype = new Parent();
+Child.prototype.constructor = Child;
+
+const child = new Child('李四', [1]);
+child.list.push(2);
+
+const child_2 = new Child('王五', [3]);
+
+console.log(child.name);        // 李四
+console.log(child.list);        // [ 1, 2 ]
+console.log(child.age);         // 20
+console.log(child.sex);         // boy
+
+console.log(child_2.name);      // 王五
+console.log(child_2.list);      // [ 3 ]
+console.log(child_2.age);       // 20
+console.log(child_2.sex);       // boy
+
+/*
+当执行 Child.prototype = new Parent() 时，Child.prototype 被整体替换成了一个 Parent 实例。
+原来的 Child.prototype 上有一个 constructor 属性指向 Child 自身，替换后就丢失了：
+    Child.prototype = new Parent();
+此时：
+Child.prototype.constructor  // → Parent（来自原型链上的 Parent.prototype.constructor）
+所以需要通过 Child.prototype.constructor = Child 手动修正回来。*/
+
+```
+
+## 判断数据类型的方法
+
+### typeof
+```javaScript
+console.log(typeof undefined) // 'undefined' 
+console.log(typeof '10') // 'String' 
+console.log(typeof 10) // 'Number' 
+console.log(typeof false) // 'Boolean' 
+console.log(typeof Symbol()) // 'Symbol' 
+console.log(typeof Function)// ‘function' 
+console.log(typeof null) // ‘Object’ 
+console.log(typeof []) // 'Object' 
+console.log(typeof {}) // 'Object'
+
+```
+**缺点：**typeof null的值为Object，无法分辨是null还是Object
+
+### instanceof
+```javaScript
+
+function Foo() { }
+var f1 = new Foo();
+var d = new Number(1)
+
+console.log(f1 instanceof Foo);// true
+console.log(d instanceof Number); //true
+console.log(123 instanceof Number); //false   不能判断字面量的基本数据类型
+
+```
+**缺点：** 只能判断对象是否存在于目标对象的原型链上
+
+### constructor
+```javaScript
+var d = new Number(1)
+var e = 1
+function fn() {
+    console.log("ming");
+}
+var date = new Date();
+var arr = [1, 2, 3];
+var reg = /[hbc]at/gi;
+
+console.log(e.constructor);//ƒ Number() { [native code] }
+console.log(e.constructor.name);//Number
+console.log(fn.constructor.name) // Function 
+console.log(date.constructor.name)// Date 
+console.log(arr.constructor.name) // Array 
+console.log(reg.constructor.name) // RegExp
+```
+### Object.prototype.toString.call()
+一种最好的基本类型检测方式 Object.prototype.toString.call() ;它可以区分 null 、 string 、boolean 、 number 、 undefined 、 array 、 function 、 object 、 date 、 math 数据类型。
+```javaScript
+console.log(Object.prototype.toString.call(undefined)); // "[object Undefined]" 
+console.log(Object.prototype.toString.call(null)); // "[object Null]" 
+console.log(Object.prototype.toString.call(123)); // "[object Number]" 
+console.log(Object.prototype.toString.call("abc")); // "[object String]" 
+console.log(Object.prototype.toString.call(true)); // "[object Boolean]" 
+
+function fn() {
+    console.log("ming");
+}
+var date = new Date();
+var arr = [1, 2, 3];
+var reg = /[hbc]at/gi;
+console.log(Object.prototype.toString.call(fn));// "[object Function]" 
+console.log(Object.prototype.toString.call(date));// "[object Date]" 
+console.log(Object.prototype.toString.call(arr)); // "[object Array]"
+console.log(Object.prototype.toString.call(reg));// "[object RegExp]"
+```
+### 实现一个通用函数判断数据类型
+```javaScript
+const getType = (s) => {
+        const r = Object.prototype.toString.call(s)
+        return r.replace(/\[object (.*?)\]/, '$1').toLowerCase()
+    }
+    // 测试
+    console.log(getType()) // undefined
+    console.log(getType(null)) // null
+    console.log(getType(1)) // number
+    console.log(getType('前端')) // string
+    console.log(getType(true)) // boolean
+    console.log(getType(Symbol('前端'))) // symbol
+    console.log(getType({})) // object
+    console.log(getType([])) // array
+```
+
+## 事件循环
+### 浏览器的进程模型
+**进程：**  程序运行需要有它自己专属的内存空间，可以把这块内存空间简单的理解为进程，每个应用至少有一个进程，进程之间相互独立，即使要通信，也需要双方同意。  
+**线程：**有了进程后，就可以运行程序的代码，运行代码的「人」称之为「线程」。一个进程至少有一个线程，所以在进程开启后会自动创建一个线程来运行代码，该线程称之为主线程。如果程序需要同时执行多块代码，主线程就会启动更多的线程来执行代码，所以一个进程中可以包含多个线程。
+>浏览器是一个多进程多线程的应用程序
+
+浏览器主要的进程有：
+1. 浏览器进程主要负责界面显示、用户交互、子进程管理等。浏览器进程内部会启动多个线程处理不同的任务。  
+2. 网络进程负责加载网络资源。网络进程内部会启动多个线程来处理不同的网络任务。  
+3. 渲染进程，渲染进程启动后，会开启一个渲染主线程，主线程负责执行  HTML、CSS、JS 代码。  
+默认情况下，浏览器会为每个标签页开启一个新的渲染进程，以保证不同的标签页之间不相互影响。
+
+渲染主线程是浏览器中最繁忙的线程，需要它处理的任务包括但不限于：
+- 解析  HTML
+- 解析  CSS
+- 计算样式
+- 布局
+- 处理图层
+- 每秒把页面画  60 次
+- 执行全局  JS 代码
+- 执行事件处理函数
+- 执行计时器的回调函数
+- ......
+
+要处理这么多的任务，主线程遇到一个难题：如何调度任务？  
+比如：正在执行一个  JS 函数，执行到一半的时候用户点击了按钮，我该立即去执行点击事件的处理函数吗？  
+我正在执行一个  JS 函数，执行到一半的时候某个计时器到达了时间，我该立即去执行它的回调吗？  
+浏览器进程通知我“用户点击了按钮”，与此同时，某个计时器也到达了时间，我应该处理哪一个呢？  
+面对这些问题，渲染主线程想出了一个绝妙的主意来处理这个问题：**排队**
+1. 在最开始的时候，渲染主线程会进入一个无限循环  
+2. 每一次循环会检查消息队列中是否有任务存在。如果有，就取出第一个任务执行，执行完一个后进入下一次循环；如果没有，则进入休眠状态。  
+3. 其他所有线程（包括其他进程的线程）可以随时向消息队列添加任务。新任务会加到消息队列的末尾。在添加新任务时，如果主线程是休眠状态，则会将其唤醒以继续循环拿取任务。  
+
+这样一来，就可以让每个任务有条不紊的、持续的进行下去了。整个过程，被称之为**事件循环（消息循环）**
+
+### js运行机制 
+
+JS是一门单线程的语言，这是因为它运行在浏览器的渲染主线程中，而渲染主线程只有一个。而渲染主线程承担着诸多的工作，渲染页面、执行  JS 都在其中运行。如果使用同步的方式，就极有可能导致主线程产生阻塞，从而导致消息队列中的很多其他任务无法得到执行。这样一来，一方面会导致繁忙的主线程白白的消耗时间，另一方面导致页面无法及时更新，给用户造成卡死现象。  
+如：
+- 计时完成后需要执行的任务  —— setTimeout 、 setInterval
+- 网络通信完成后需要执行的任务  -- XHR 、 Fetch
+- 用户操作后需要执行的任务  -- addEventListener  
+
+如果让渲染主线程等待这些任务的时机达到，就会导致主线程长期处于「阻塞」的状态，从而导致浏览器「卡死」
+
+所以浏览器采用异步的方式来避免。具体做法是当某些任务发生时，比如计时器、网络、事件监听，主线程将任务交给其他线程去处理，自身立即结束任务的执行，转而执行后续代码。当其他线程完成时，将事先传递的回调函数包装成任务，加入到消息队列的末尾排队，等待主线程调度执行。在这种异步模式下，浏览器永不阻塞，从而最大限度的保证了单线程的流畅运行。
+
+#### 任务是否有优先级
+任务没有优先级，在消息队列中先进先出，但**消息队列**是有优先级的
+>根据  W3C 的最新解释:  
+每个任务都有一个任务类型，同一个类型的任务必须在一个队列，不同类型的任务可以分属于不同的队列。在一次事件循环中，浏览器可以根据实际情况从不同的队列中取出任务执行。
+
+>在目前  chrome 的实现中，至少包含了下面的队列：
+- 延时队列：用于存放计时器到达后的回调任务，优先级「中」
+- 交互队列：用于存放用户操作后产生的事件处理任务，优先级「高」
+- 微队列：用户存放需要最快执行的任务，优先级「最高」
+
+添加任务到微队列的主要方式主要是使用  Promise、MutationObserver
+```javaScript
+// 立即把一个函数添加到微队列
+Promise.resolve().then(函数)
+```
+### 阐述 JS 的事件循环
+>事件循环又叫做消息循环，是浏览器渲染主线程的工作方式。在  Chrome 的源码中，它开启一个不会结束的  for 循环，每次循环从消息队列中取出第一个任务执行，而其他线程只需要在合适的时候将任务加入到队列末尾即可。过去把消息队列简单分为宏队列和微队列，这种说法目前已无法满足复杂的浏览器环境，取而代之的是一种更加灵活多变的处理方式。根据  W3C 官方的解释，每个任务有不同的类型，同类型的任务必须在同一个队列，不同的任务可以属于不同的队列。不同任务队列有不同的优先级，在一次事件循环中，由浏览器自行决定取哪一个队列的任务。但浏览器必须有一个微队列，微队列的任务一定具有最高的优先级，必须优先调度执行。
+
+### 经典案例
+``` javaScript
+console.log('1');
+ 
+setTimeout(function() {
+    console.log('2');
+    process.nextTick(function() {
+        console.log('3');
+    })
+    new Promise(function(resolve) {
+        console.log('4');
+        resolve();
+    }).then(function() {
+        console.log('5')
+    })
+})
+process.nextTick(function() {
+    console.log('6');
+})
+new Promise(function(resolve) {
+    console.log('7');
+    resolve();
+}).then(function() {
+    console.log('8')
+})
+ 
+setTimeout(function() {
+    console.log('9');
+    process.nextTick(function() {
+        console.log('10');
+    })
+    new Promise(function(resolve) {
+        console.log('11');
+        resolve();
+    }).then(function() {
+        console.log('12')
+    })
+})
+/*
+1、 第一轮事件循环流程分析如下：
+    整体script作为第一个任务进入主线程，遇到console.log，输出1。
+    遇到setTimeout，其回调函数被分发到延时任务中。我们暂且记为setTimeout1。
+    遇到process.nextTick()，其回调函数被分发到微任务中。我们记为process1。
+    遇到Promise，new Promise直接执行，输出7。then被分发到微任务中。我们记为then1。
+    又遇到了setTimeout，其回调函数被分发到延时任务中，我们记为setTimeout2。
+         
+    延时任务             微任务
+    setTimeout1         process1
+    setTimeout2         then1
+     
+    上表是第一轮事件循环宏任务结束时各Event Queue的情况，此时已经输出了1和7。
+    我们发现了process1和then1两个微任务。
+    执行process1,输出6。
+    执行then1，输出8。
+     
+    好了，第一轮事件循环正式结束，这一轮的结果是输出1，7，6，8。
+     
+2、 那么第二轮时间循环从setTimeout1延时务开始：
+     
+    首先输出2。接下来遇到了process.nextTick()，同样将其分发到微任务中，
+    记为process2。new Promise立即执行输出4，then也分发到微任务中，记为then2。
+     
+    延时任务Event Queue    微任务Event Queue
+    setTimeout2           process2
+                          then2
+                           
+    第二轮事件循环延时任务结束，我们发现有process2和then2两个微任务可以执行。
+        输出3。
+        输出5。
+        第二轮事件循环结束，第二轮输出2，4，3，5。
+ 
+3、 第三轮事件循环开始，此时只剩setTimeout2了，执行。
+        直接输出9。
+        将process.nextTick()分发到微任务Event Queue中。记为process3。
+        直接执行new Promise，输出11。
+        将then分发到微任务Event Queue中，记为then3。
+         
+    延时务Event Queue       微任务Event Queue
+                            process3
+                            then3     
+    第三轮事件循环务执行结束，执行两个微任务process3和then3。
+        输出10。
+        输出12。
+        第三轮事件循环结束，第三轮输出9，11，10，12。
+ 
+    整段代码，共进行了三次事件循环，完整的输出为1，7，6，8，2，4，3，5，9，11，10，12。
+*/
+```
+
+## 闭包
+>简单说：一个函数能够访问并记住它创建时所在作用域的变量，即使该函数在其他地方执行。
+
+```javaScript
+function outer() {
+  let count = 0; // 外部函数的局部变量
+
+  function inner() {
+    count++; // inner 引用了 outer 的变量
+    console.log(count);
+  }
+
+  return inner; // 返回 inner 函数
+}
+
+const fn = outer();
+fn(); // 1
+fn(); // 2
+fn(); // 3
+```
+### 闭包的三个核心条件
+
+|条件|	说明|
+|:--------|:--------|
+|函数嵌套|	内部函数定义在外部函数中
+|引用外部变量|	内部函数引用了外部函数的变量
+|外部函数返回内部函数|	内部函数被传递到外部作用域执行
+
+```text
+
+正常情况：函数执行完毕 → 局部变量被回收
+闭包情况：函数执行完毕 → 被引用的变量持续存在于堆内存
+
+```
+> 闭包让变量的生命周期 延长，而不是跟随函数执行结束而销毁
+
+### 闭包的经典应用
+
+#### 数据私有化
+
+```javaScript
+function createCounter() {
+  let count = 0; // 私有变量，外部无法直接访问
+
+  return {
+    increment() { count++; },
+    decrement() { count--; },
+    getCount() { return count; }
+  };
+}
+
+const counter = createCounter();
+counter.increment();
+counter.increment();
+console.log(counter.getCount()); // 2
+// console.log(counter.count); // undefined，无法直接访问
+```
+
+#### 函数柯里化
+
+```javaScript
+
+function multiply(a) {
+  return function(b) {
+    return a * b;
+  };
+}
+
+const double = multiply(2);
+const triple = multiply(3);
+
+console.log(double(5));  // 10
+console.log(triple(5));  // 15
+
+```
+
+####  缓存/记忆化
+```javaScript
+function memoize(fn) {
+  const cache = {}; // 闭包缓存
+
+  return function(...args) {
+    const key = JSON.stringify(args);
+    if (cache[key]) {
+      console.log('从缓存读取');
+      return cache[key];
+    }
+    const result = fn(...args);
+    cache[key] = result;
+    return result;
+  };
+}
+
+const expensiveCalc = memoize((n) => {
+  console.log('计算中...');
+  return n * n;
+});
+
+expensiveCalc(5); // 计算中... → 25
+expensiveCalc(5); // 从缓存读取 → 25（不再计算）
+
+```
+
+#### for 循环中的闭包（经典面试题）
+```javaScript
+// 错误：let 之前用 var，全部输出 5
+for (var i = 0; i < 5; i++) {
+  setTimeout(() => console.log(i), 100);
+}
+// 输出：5 5 5 5 5
+
+// 正确：用 IIFE 创建闭包保存每次循环的 i
+for (var i = 0; i < 5; i++) {
+  (function(j) {
+    setTimeout(() => console.log(j), 100);
+  })(i);
+}
+// 输出：0 1 2 3 4
+
+// 更简单：直接用 let（块级作用域）
+for (let i = 0; i < 5; i++) {
+  setTimeout(() => console.log(i), 100);
+}
+
+```
+
+#### 闭包的优缺点
+|**优点**|	**说明**|
+|:-------|:--------|
+|数据私有化|	变量不会被外部直接访问和修改
+|状态持久化|	变量在函数执行后依然存在
+|模块化	|实现封装，避免全局污染 
+|**缺点**|	**说明**|
+|内存泄漏|	引用的变量不会被 GC 回收
+|性能消耗|	闭包比非闭包函数消耗更多内存
+|调试困难|	变量作用域链条复杂
+
+#### 解决内存泄漏
+```javaScript
+function handler() {
+  let bigData = new Array(1000000); // 大量数据
+  return function() {
+    console.log(bigData.length);
+  };
+}
+
+const fn = handler();
+fn(); // 使用完毕后，手动解除引用
+// fn = null; // 解除引用，让 GC 回收
+```
+
+## 防抖 & 节流
+
+### 防抖
+>在事件被触发后 n 秒后再执行回调，如果在这 n 秒内又被触发，则重新计时。
+
+#### 基础版防抖函数（闭包经典应用）
+
+```javaScript
+// 防抖函数
+function debounce(fn, delay = 300) {
+  let timer = null; // 闭包变量，保存定时器引用
+
+  return function(...args) {
+    // 每次触发都清除上一次的定时器，重新计时
+    if (timer) clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      fn.apply(this, args); // 执行原始函数
+      timer = null;
+    }, delay);
+  };
+}
+
+// 使用
+// 搜索框防抖
+const searchInput = document.getElementById('search');
+
+const handleSearch = debounce(function(e) {
+  fetch(`/api/search?keyword=${e.target.value}`)
+    .then(res => res.json())
+    .then(data => renderResults(data));
+}, 500);
+
+searchInput.addEventListener('input', handleSearch);
+
+// 用户连续输入 "React"，只在停止 500ms 后发一次请求
+```
+#### 立即执行的防抖
+```javaScript
+function debounceImmediate(fn, delay = 300) {
+  let timer = null;
+
+  return function(...args) {
+    // 第一次立即执行
+    if (!timer) {
+      fn.apply(this, args);
+    }
+
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = null;
+    }, delay);
+  };
+}
+```
+### 节流
+>在固定时间间隔内，只执行一次回调。无论触发多少次，按固定频率执行。
+
+### 基础版节流函数（闭包经典应用）
+```javaScript
+function throttle(fn, interval = 300) {
+  let lastTime = 0; // 闭包变量，记录上次执行时间
+
+  return function(...args) {
+    const now = Date.now();
+
+    if (now - lastTime >= interval) {
+      fn.apply(this, args);
+      lastTime = now;
+    }
+  };
+}
+
+// 滚动节流
+const handleScroll = throttle(function() {
+  const scrollTop = document.documentElement.scrollTop;
+  console.log('当前滚动位置:', scrollTop);
+  // 计算是否需要加载更多
+}, 200);
+
+window.addEventListener('scroll', handleScroll);
+
+// 每 200ms 最多执行一次，即使滚动事件触发了几百次
+```
+### 防抖 vs 节流 对比
+|维度|	防抖（Debounce）|	节流（Throttle）|
+|:--------|:--------|:--------|
+|核心逻辑	|停止触发后执行	|固定间隔执行一次
+|执行时机	|最后一次触发后的 delay 后|	每次触发时判断间隔
+|触发频率	|连续触发 → 只执行一次|	连续触发 → 按频率执行
+|适用场景	|搜索输入、表单验证	|滚动监听、拖拽、resize
+|比喻	|电梯关门等 5 秒	|地铁闸机 3 秒一次
+
+一句话记忆
+
+>防抖：等你不动了再执行  
+节流：不管你动不动，我按节奏执行
+
+
+## this
+>this的指向在函数定义的时候是确定不了的，只有函数执行的时候才能确定this到底指向谁，实际上this的最终指向的是那个调用它的对象
+
+```javaScript
+function a() {
+  var user = "追梦赤子";
+  console.log(this.user); //undefined
+  console.log(this); //Window
+}
+a();
+```
+按照我们上面说的this最终指向的是调用它的对象，这里的函数a实际是被Window对象所点出来的，下面的代码就可以证明。
+```javaScript
+function a(){
+  var user = "追梦赤子";
+  console.log(this.user); //undefined
+  console.log(this);　　//Window
+}
+window.a();
+
+
+var o = {
+  user:"追梦赤子",
+  fn:function(){
+    console.log(this.user);  //追梦赤子
+  }
+}
+o.fn();
+```
+这里的this指向的是对象o，因为你调用这个fn是通过o.fn()执行的，那自然指向就是对象o，这里再次强调一点，this的指向在函数创建的时候是决定不了的，在调用的时候才能决定，谁调用的就指向谁，一定要搞清楚这个。
+```javaScript
+var o = {
+  user:"追梦赤子",
+  fn:function(){
+    console.log(this.user); //追梦赤子
+  }
+}
+window.o.fn();
+```
+这段代码和上面的那段代码几乎是一样的，但是这里的this为什么不是指向window，如果按照上面的理论，最终this指向的是调用它的对象，这里先说个而外话，window是js中的全局对象，我们创建的变量实际上是给window添加属性，所以这里可以用window点o对象。  
+这里先不解释为什么上面的那段代码this为什么没有指向window，我们再来看一段代码。
+```javaScript
+var o = {
+  a:10,
+  b:{
+    a:12,
+    fn:function(){
+      console.log(this.a); //12
+    }
+  }
+}
+o.b.fn();
+```
+这里同样也是对象o点出来的，但是同样this并没有执行它，那你肯定会说我一开始说的那些不就都是错误的吗？其实也不是，只是一开始说的不准确，接下来我将补充一句话，我相信你就可以彻底的理解this的指向的问题。  
+1. 如果一个函数中有this，但是它没有被上一级的对象所调用，那么this指向的就是window，这里需要说明的是在js的严格版中this指向的不是window，但是我们这里不探讨严格版的问题，你想了解可以自行上网查找。  
+2. 如果一个函数中有this，这个函数有被上一级的对象所调用，那么this指向的就是上一级的对象。  
+3. 如果一个函数中有this，这个函数中包含多个对象，尽管这个函数是被最外层的对象所调用，this指向的也只是它上一级的对象  
+
+```javaScript
+var o = {
+  a:10,
+  b:{
+    // a:12,
+    fn:function(){
+      console.log(this.a); //undefined
+    }
+  }
+}
+o.b.fn();
+```
+尽管对象b中没有属性a，这个this指向的也是对象b，因为this只会指向它的上一级对象，不管这个对象中有没有this要的东西。  
+
+还有一种比较特殊的情况，看下面这个例子：
+
+```javaScript
+var o = {
+  a:10,
+  b:{
+    a:12,
+    fn:function(){
+      console.log(this.a); //undefined
+      console.log(this); //window
+    }
+  }
+}
+var j = o.b.fn;
+j();
+```
+这里this指向的是window，是不是有些蒙了？其实是因为你没有理解一句话，这句话同样至关重要。
+this永远指向的是最后调用它的对象，也就是看它执行的时候是谁调用的，例子4中虽然函数fn是被对象b所引用，但是在将fn赋值给变量j的时候并没有执行所以最终指向的是window，这和例子3是不一样的，例子3是直接执行了fn。  
+
+this讲来讲去其实就是那么一回事，只不过在不同的情况下指向的会有些不同，上面的总结每个地方都有些小错误，也不能说是错误，而是在不同环境下情况就会有不同，所以我也没有办法一次解释清楚，只能你慢慢地的去体会。
+
+构造函数版this
+```javaScript
+function Fn(){
+  this.user = "追梦赤子";
+}
+var a = new Fn();
+console.log(a.user); //追梦赤子
+```
+这里之所以对象a可以点出函数Fn里面的user是因为new关键字可以改变this的指向，将这个this指向对象a。  
+
+### 当this碰到return时
+```javaScript
+function Fn()  
+{  
+  this.user = '追梦赤子';  
+  return {};  
+}
+var a = new Fn;  
+console.log(a.user); //undefined
+
+再看一个
+function Fn()  
+{  
+  this.user = '追梦赤子';  
+  return function(){};
+}
+var a = new Fn;  
+console.log(a.user); //undefined
+
+再来
+function Fn()  
+{  
+  this.user = '追梦赤子';  
+  return 1;
+}
+var a = new Fn;  
+console.log(a.user); //追梦赤子
+function Fn()  
+{  
+  this.user = '追梦赤子';  
+  return undefined;
+}
+var a = new Fn;  
+console.log(a.user); //追梦赤子
+
+```
+什么意思呢？  
+如果返回值是一个对象，那么this指向的就是那个返回的对象，如果返回值不是一个对象那么this还是指向函数的实例。
+```javaScript
+function Fn()  
+{  
+  this.user = '追梦赤子';  
+  return undefined;
+}
+var a = new Fn;  
+console.log(a); //fn {user: "追梦赤子"}
+```
+还有一点就是虽然null也是对象，但是在这里this还是指向那个函数的实例，因为null比较特殊。
+```javaScript
+function Fn()  
+{  
+  this.user = '追梦赤子';  
+  return null;
+}
+var a = new Fn;  
+console.log(a.user); //追梦赤子
+```
+##  call vs apply vs bind
+
+>三者的相同点：都是用来改变this的指向
+
+### call()和apply()的区别
+
+**相同点：**都是调用一个对象的一个方法，用另一个对象替换当前对象（功能相同）
+
+例如：  
+- B.call(A, args1,args2);即A对象调用B对象的方法  
+- F.apply(G, arguments);即G对象应用F对象的方法  
+
+**不同点：**参数书写方式不同  
+
+- call()的第一个参数是this要指向的对象，后面传入的是参数列表，参数可以是任意类型，当第一个参数为null、undefined的时候，默认指向window；  
+
+- apply()：第一个参数是this要指向的对象，第二个参数是数组
+
+```javaScript
+var obj = {}//定义一个空的对象
+function f(x,y){
+  console.log(x,y)
+  console.log(this) //this是指obj
+}
+f.apply(obj,[1,2]) //后面的值需要用[]括起来
+f.call(obj,1,2) //直接写
+```
+### call()和bind()的区别
+**相同点：**都是用来改变this的指向。  
+**不同点：**call()改过this的指向后，会再执行函数，bind()改过this后，不执行函数，会返回一个绑定新this的函数。
+
+```javaScript
+//例如：
+function f(){
+  console.log("看我怎么被调用");
+  console.log(this) //指向this
+}
+var obj = {};
+f.call(obj) //直接调用函数
+var g = f.bind(obj); //bind()不能调用函数
+g();  //此时才调用函数
+```
+>补充：new 绑定的优先级高于 bind 显示绑定，通过 new 进行构造函数调用时，会创建一个新对象，这个新对象会代替 bind 的对象绑定，作为此函数的 this，并且在此函数没有返回对象的情况下，返回这个新建的对象
+
+## Promise
+------待补充------
