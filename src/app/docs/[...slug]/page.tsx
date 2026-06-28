@@ -16,6 +16,8 @@
 
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { Calendar, FileText, PenLine } from 'lucide-react';
+import { DynamicIcon } from '@/components/ui/dynamic-icon';
 import { getArticleBySlug, getArticlesByCategory, getCategories, getPrevNextArticles, getTocFromContent } from '@/lib/content';
 import { ArticleContent } from '@/components/docs/article-content';
 import { TableOfContents } from '@/components/docs/toc';
@@ -84,7 +86,7 @@ export default async function DocPage({
               {article.meta.title}
             </h1>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>📅 {article.meta.date}</span>
+              <span className="inline-flex items-center gap-1"><Calendar size={14} /> {article.meta.date}</span>
               {article.meta.tags.length > 0 && (
                 <div className="flex gap-1.5">
                   {article.meta.tags.map((tag) => (
@@ -157,7 +159,7 @@ export default async function DocPage({
       <div className="text-sm text-muted-foreground mb-2">{breadcrumb}</div>
       {/* 分类标题 */}
       <h1 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-        <span>{category.icon}</span>
+        <DynamicIcon name={category.icon} size={24} />
         {subCategoryName || category.name}
       </h1>
 
@@ -171,7 +173,7 @@ export default async function DocPage({
               className="block rounded-lg border border-border p-4 hover:shadow-sm hover:bg-muted/50 transition-all"
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-foreground">📖 {a.title}</h3>
+                <h3 className="font-medium text-foreground"><FileText className="inline-block mr-1.5 -mt-0.5" size={16} />{a.title}</h3>
                 <span className="text-xs text-muted-foreground shrink-0 ml-4">
                   {a.date}
                 </span>
@@ -184,7 +186,7 @@ export default async function DocPage({
         </div>
       ) : (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="text-4xl mb-4">📝</p>
+          <PenLine className="mx-auto mb-4 text-muted-foreground" size={48} />
           <p>该分类下暂无笔记，持续更新中...</p>
         </div>
       )}

@@ -11,6 +11,8 @@
  */
 
 import Link from 'next/link';
+import { BookOpen, Pin, Folder, Tag } from 'lucide-react';
+import { DynamicIcon } from '@/components/ui/dynamic-icon';
 import { getAllArticles, getCategories } from '@/lib/content';
 import type { ArticleMeta } from '@/lib/content';
 import type { CategoryInfo } from '@/lib/categories';
@@ -85,7 +87,7 @@ function CategoryCard({ category }: { category: CategoryInfo }) {
       className="group block rounded-lg border border-border bg-card p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
     >
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-3xl">{category.icon}</span>
+        <DynamicIcon name={category.icon} className="text-primary" size={32} />
         <div>
           <h3 className="font-semibold text-lg text-card-foreground group-hover:text-primary transition-colors">
             {category.name}
@@ -139,7 +141,8 @@ export default function HomePage() {
       <section className="relative bg-gradient-to-b from-primary/5 to-transparent py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            📚 精进手记
+            <BookOpen className="inline-block mr-2 -mt-1" size={36} />
+            精进手记
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8">
             「记录所学，分析所思，沉淀所悟」
@@ -158,7 +161,7 @@ export default function HomePage() {
         {/* ========== 最近更新 ========== */}
         <section>
           <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <span>📌</span> 最近更新
+            <Pin className="inline-block" size={24} /> 最近更新
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {recentArticles.map((article) => (
@@ -170,7 +173,7 @@ export default function HomePage() {
         {/* ========== 知识分类 ========== */}
         <section>
           <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <span>📂</span> 知识分类
+            <Folder className="inline-block" size={24} /> 知识分类
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map((category) => (
@@ -183,7 +186,7 @@ export default function HomePage() {
         {popularTags.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>🏷️</span> 热门标签
+              <Tag className="inline-block" size={24} /> 热门标签
             </h2>
             <div className="flex flex-wrap gap-2">
               {popularTags.map(([tag, count]) => (

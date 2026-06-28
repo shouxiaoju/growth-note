@@ -16,7 +16,7 @@
 export interface CategoryInfo {
   name: string;         // 分类显示名称，如"前端开发"
   slug: string;         // URL 路径标识，如"frontend"
-  icon: string;         // 图标 emoji，如"🌐"
+  icon: string;         // 图标名称，对应 lucide 图标，如 "globe"
   description: string;  // 分类描述文本
   children: SubCategoryInfo[]; // 子分类列表
   articleCount: number; // 该分类下文章总数（由 content.ts 填充）
@@ -49,7 +49,7 @@ export interface SubCategoryInfo {
 export const categoryConfig: Record<string, { name: string; icon: string; description: string; children: Record<string, string> }> = {
   frontend: {
     name: '前端开发',
-    icon: '🌐',
+    icon: 'globe',
     description: 'HTML · CSS · JS · React · TS · 小程序',
     children: {
       html: 'HTML5',
@@ -62,7 +62,7 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
   },
   backend: {
     name: '后端开发',
-    icon: '🖥️',
+    icon: 'monitor',
     description: 'Java · Spring Boot · MySQL（即将上线）',
     children: {
       java: 'Java',
@@ -73,7 +73,7 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
   },
   ai: {
     name: 'AI / 智能开发',
-    icon: '🤖',
+    icon: 'bot',
     description: 'Prompt · Agent · RAG · 工具链 · 大模型',
     children: {
       'prompt-engineering': 'Prompt 工程',

@@ -15,6 +15,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { Search } from 'lucide-react';
 import type { ArticleMeta } from '@/lib/content';
 
 interface SearchDialogProps {
@@ -92,7 +93,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
       >
         {/* 搜索输入框 */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-          <span className="text-muted-foreground">🔍</span>
+          <Search className="text-muted-foreground" size={18} />
           <input
             type="text"
             value={query}

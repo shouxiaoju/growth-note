@@ -10,6 +10,8 @@
  * 未来可扩展为从配置文件或 CMS 读取。
  */
 
+import { User, Wrench, BookOpen } from 'lucide-react';
+
 export default function AboutPage() {
   // 技术栈标签
   const techStack = [
@@ -34,9 +36,9 @@ export default function AboutPage() {
 
   // 联系方式
   const contacts = [
-    { icon: '💻', label: 'GitHub', value: 'github.com/liuxiansheng', href: '#' },
-    { icon: '📧', label: '邮箱', value: 'liuxiansheng@example.com', href: 'mailto:liuxiansheng@example.com' },
-    { icon: '💬', label: '微信', value: '15838426619', href: undefined },
+    { icon: 'github', label: 'GitHub', value: 'github.com/liuxiansheng', href: '#' },
+    { icon: 'mail', label: '邮箱', value: 'liuxiansheng@example.com', href: 'mailto:liuxiansheng@example.com' },
+    { icon: 'message-circle', label: '微信', value: '15838426619', href: undefined },
   ];
 
   return (
@@ -44,8 +46,8 @@ export default function AboutPage() {
       {/* ========== 个人信息区 ========== */}
       <div className="text-center mb-12">
         {/* 头像占位 */}
-        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
-          👨‍💻
+        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <User className="text-primary" size={40} />
         </div>
         <h1 className="text-3xl font-bold text-foreground mb-2">瘦小橘</h1>
         <p className="text-lg text-muted-foreground">前端开发工程师</p>
@@ -58,7 +60,7 @@ export default function AboutPage() {
       {/* ========== 技术栈标签云 ========== */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-          <span>🛠️</span> 技术栈
+          <Wrench className="inline-block" size={20} /> 技术栈
         </h2>
         <div className="flex flex-wrap gap-2">
           {techStack.map((tech) => (
@@ -107,7 +109,7 @@ export default function AboutPage() {
       {/* ========== 关于本站 ========== */}
       <section>
         <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-          <span>📖</span> 关于本站
+          <BookOpen className="inline-block" size={20} /> 关于本站
         </h2>
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-4 text-foreground leading-7">
           <p>

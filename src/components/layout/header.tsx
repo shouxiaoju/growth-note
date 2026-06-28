@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
+import { BookOpen, Search, Sun, Moon, X, Menu } from 'lucide-react';
 import { SearchDialog } from '@/components/search-dialog';
 
 export function Header() {
@@ -84,7 +85,7 @@ export function Header() {
         <div className="max-w-[1400px] mx-auto flex items-center justify-between h-14 px-4">
           {/* Logo + 站点名称 */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span className="text-xl">📚</span>
+            <BookOpen className="text-primary" size={22} />
             <span className="font-semibold text-foreground hidden sm:inline">
               精进手记
             </span>
@@ -114,7 +115,7 @@ export function Header() {
               onClick={() => setSearchOpen(true)}
               className="flex items-center gap-2 text-sm text-muted-foreground bg-muted hover:bg-muted/80 px-3 py-1.5 rounded-md transition-colors"
             >
-              <span>🔍</span>
+              <Search size={16} />
               <span className="hidden sm:inline">搜索</span>
               <kbd className="hidden sm:inline text-xs bg-background border border-border px-1.5 py-0.5 rounded">
                 ⌘K
@@ -128,7 +129,7 @@ export function Header() {
                 className="p-2 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="切换暗黑模式"
               >
-                {theme === 'dark' ? '☀️' : '🌙'}
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
             )}
 
@@ -138,7 +139,7 @@ export function Header() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="菜单"
             >
-              {mobileMenuOpen ? '✕' : '☰'}
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
