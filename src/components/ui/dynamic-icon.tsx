@@ -24,6 +24,9 @@ import {
   Bot,
   Github,
   MessageCircle,
+  Code2,
+  Server,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -49,6 +52,9 @@ const iconMap: Record<string, LucideIcon> = {
   bot: Bot,
   github: Github,
   'message-circle': MessageCircle,
+  'code-2': Code2,
+  server: Server,
+  sparkles: Sparkles,
 };
 
 interface DynamicIconProps {

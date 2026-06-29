@@ -49,7 +49,7 @@ export interface SubCategoryInfo {
 export const categoryConfig: Record<string, { name: string; icon: string; description: string; children: Record<string, string> }> = {
   frontend: {
     name: '前端开发',
-    icon: 'globe',
+    icon: 'code-2',
     description: 'HTML · CSS · JS · React · TS · 小程序',
     children: {
       html: 'HTML5',
@@ -62,7 +62,7 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
   },
   backend: {
     name: '后端开发',
-    icon: 'monitor',
+    icon: 'server',
     description: 'Java · Spring Boot · MySQL（即将上线）',
     children: {
       java: 'Java',
@@ -73,7 +73,7 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
   },
   ai: {
     name: 'AI / 智能开发',
-    icon: 'bot',
+    icon: 'sparkles',
     description: 'Prompt · Agent · RAG · 工具链 · 大模型',
     children: {
       'prompt-engineering': 'Prompt 工程',

@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { categoryConfig } from '@/lib/categories';
+import { DynamicIcon } from '@/components/ui/dynamic-icon';
 
 /** 分类树节点（包含服务端返回的文章计数和文章列表） */
 interface CategoryNode {
@@ -104,7 +105,7 @@ export function Sidebar() {
                       : 'text-foreground hover:bg-muted'
                   }`}
                 >
-                  <span>{cat.icon}</span>
+                  <DynamicIcon name={cat.icon} size={16} />
                   <span className="flex-1 text-left">{cat.name}</span>
                   {/* 折叠/展开指示箭头 */}
                   <span
@@ -189,7 +190,7 @@ export function Sidebar() {
                       : 'text-foreground hover:bg-muted'
                   }`}
                 >
-                  <span>{config.icon}</span>
+                  <DynamicIcon name={config.icon} size={16} />
                   <span className="flex-1 text-left">{config.name}</span>
                   <span
                     className={`text-xs transition-transform ${

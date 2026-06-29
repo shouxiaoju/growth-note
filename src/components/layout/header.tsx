@@ -21,6 +21,7 @@ import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { BookOpen, Search, Sun, Moon, X, Menu } from 'lucide-react';
 import { SearchDialog } from '@/components/search-dialog';
+import { MobileNavDrawer } from '@/components/layout/mobile-nav-drawer';
 
 export function Header() {
   // 当前路由路径
@@ -132,6 +133,9 @@ export function Header() {
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
             )}
+
+            {/* 移动端分类导航按钮（底部抽屉） */}
+            <MobileNavDrawer />
 
             {/* 移动端汉堡菜单按钮 */}
             <button

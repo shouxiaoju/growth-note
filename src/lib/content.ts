@@ -24,6 +24,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import GithubSlugger from 'github-slugger';
 import { categoryConfig } from './categories';
 import type { CategoryInfo } from './categories';
 
@@ -243,16 +244,14 @@ export function searchArticles(query: string): ArticleMeta[] {
 export function getTocFromContent(content: string): { id: string; text: string; level: number }[] {
   const headingRegex = /^(#{2,4})\s+(.+)$/gm;
   const toc: { id: string; text: string; level: number }[] = [];
+  const slugger = new GithubSlugger();
   let match;
 
   while ((match = headingRegex.exec(content)) !== null) {
     const level = match[1].length;
     const text = match[2].trim();
-    // 生成 URL 安全的锚点 ID：中文保留，特殊字符替换为连字符
-    const id = text
-      .toLowerCase()
-      .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
-      .replace(/^-|-$/g, '');
+    // 使用 github-slugger 生成与 rehype-slug 完全一致的锚点 ID（含去重逻辑）
+    const id = slugger.slug(text);
     toc.push({ id, text, level });
   }
 
