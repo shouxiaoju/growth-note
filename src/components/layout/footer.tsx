@@ -18,6 +18,16 @@ export function Footer() {
             © 2026 瘦小橘 | 记录所学，分析所思，沉淀所悟
           </div>
 
+          {/* ICP 备案号 */}
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            备案号：豫ICP备2026027954号-1
+          </a>
+
           {/* 站内导航 */}
           <nav className="flex items-center gap-4 text-sm text-muted-foreground">
             <Link href="/" className="hover:text-foreground transition-colors">

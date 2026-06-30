@@ -142,7 +142,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             <BookOpen className="inline-block mr-2 -mt-1" size={36} />
-            精进手记
+            乐码手记
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8">
             「记录所学，分析所思，沉淀所悟」

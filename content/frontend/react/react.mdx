@@ -1,0 +1,548 @@
+---
+title: React 日常总结
+description: react个人知识点总结
+date: 2026-06-30
+tags: [React]
+category: frontend/react
+order: 1
+---
+# React日常总结
+
+## React 基础概念
+
+React是Facebook开发的用于构建用户界面的JavaScript库。
+
+### 核心思想
+
+1. 组件化：UI拆分为独立、可复用的组件
+2. 声明式：描述UI应该是什么样子，而非如何操作Dom
+3. 单项数据流：数据从父组件流向子组件
+4. 虚拟DOM：React使用虚拟DOM来优化性能
+
+## 什么是虚拟 DOM
+虚拟 DOM 本质上是：
+
+>用 JavaScript 对真实 DOM 的一种“描述对象”
+
+React 不会一上来就直接操作浏览器里的真实 DOM，而是先在内存里用一个 JS 对象来表示页面结构。
+```jsx
+// jsx
+<div className="box">
+  <h1>Hello</h1>
+</div>
+
+// 在 React 内部可以理解成类似这样的对象结构,虚拟 DOM 是 JavaScript 对象，用来描述真实 DOM 结构。
+//它不是真实页面上的节点，而是内存里的数据结构。
+
+{
+  type: "div",
+  props: {
+    className: "box",
+    children: {
+      type: "h1",
+      props: {
+        children: "Hello"
+      }
+    }
+  }
+}
+```
+### 虚拟 DOM 的作用
+- 减少直接操作真实 DOM 的次数
+- 把界面变化先转换为 JS 计算
+- 便于跨平台（比如 React Native 也能用类似思想）
+
+## 虚拟dom和真实dom的区别
+真实 DOM 的操作通常比较慢，而且频繁操作会影响性能。
+
+如果你直接这样做：
+
+- 改文本  
+- 加节点  
+- 删节点  
+- 改样式   
+
+每次都可能触发浏览器的重排、重绘。
+
+而 React 的思路是：
+
+- 先生成新的虚拟 DOM
+- 和旧的虚拟 DOM 做对比
+- 找出最小变化
+- 只更新必要的真实 DOM
+
+这样就能更高效。
+
+## 什么是 Diff 算法
+Diff 算法就是：
+
+>比较新旧两个虚拟 DOM 的差异，找出需要更新的部分。它的目标不是“完全比较所有节点”，而是尽量高效地判断哪些地方变了。
+
+React 的 Diff 不是简单的暴力比较，而是有一些优化策略。
+
+1. 只比较同层节点
+
+如果一个节点类型变了，React 通常会认为这个节点及其子树都变了。
+```jsx
+//例如：
+
+<div>
+  <p>hello</p>
+</div>
+
+//变成：
+
+<div>
+  <span>hello</span>
+</div>
+// 因为 p 变成了 span，React 会直接替换这个节点，而不是深度逐个比子节点
+```
+
+2. 节点类型相同就复用，不同就替换
+```jsx
+<div className="a">A</div>
+// 变成：
+<div className="b">B</div>
+// div 类型相同，所以 React 会复用这个 DOM，只更新属性和文本。
+
+// 如果是：
+<div></div>
+//变成：
+<span></span>
+// 类型不同，直接销毁旧的，创建新的。
+```
+3. 列表比较依赖 key
+在列表渲染中，React 会通过 key 来判断哪些元素是同一个。
+
+如果没有 key，React 很难准确知道列表项是否是“同一个元素”，可能会导致：  
+1. 误更新
+2. 性能下降  
+3. 状态错乱
+```jsx
+// 例如：
+// 旧虚拟 DOM：
+<ul>
+  <li key="1">A</li>
+  <li key="2">B</li>
+</ul>
+// 新虚拟 DOM：
+<ul>
+  <li key="1">A</li>
+  <li key="2">C</li>
+</ul>
+```
+React 对比后发现：
+- key=1 的节点没变  
+- key=2 的文本从 B 变成了 C  
+
+于是只更新第二个 li 的内容，而不是重建整个列表。
+
+## 为什么有 key 就能提高性能
+React 在渲染列表时，需要知道：
+
+- 这个新列表项，是不是旧列表里的那个？
+- 它只是位置变了，还是内容真的变了？
+- 能不能直接复用原来的 DOM 和组件状态？
+
+key 能帮助 React 更准确地判断“哪些列表项是同一个元素”，从而在 Diff 时尽量复用已有 DOM，而不是误删、误建。
+
+**例子：**
+```jsx
+// 旧列表
+[
+  { id: 1, name: "A" },
+  { id: 2, name: "B" },
+  { id: 3, name: "C" }
+]
+// 新列表
+[
+  {  id: 0, name: "X" },
+  { id: 1, name: "A" },
+  { id: 2, name: "B" },
+  { id: 3, name: "C" }
+]
+```
+**如果没有 key**
+
+React 会认为：
+- 第 1 个变成 X
+- 第 2 个变成 A
+- 第 3 个变成 B
+- 第 4 个变成 C
+
+结果就是：很多节点都要“重新对比”。
+
+如果有 key
+
+React 会很容易识别：
+
+- 新增了 key=0
+- key=1、2、3 都是原来的节点，只是位置后移
+
+这样就可以：只创建一个新节点，其他节点直接复用
+>**注意：** 不是说 key 本身“让 DOM 操作变快”，而是：key 让 Diff 更准确，从而减少不必要的 DOM 重新创建和组件重渲染。
+
+**key 还能避免状态错乱**
+
+例如列表里每一项有输入框：
+```jsx
+items.map(item => (
+  <Input key={item.id} value={item.value} />
+))
+```
+如果不用稳定 key，而是用 index，当你在中间插入/删除时，React 可能会复用错组件，导致：
+
+- 输入框的值对应错了
+- 组件内部状态错乱
+
+所以 key 不只是性能问题，也是正确性问题。
+
+## 属性：props
+- 外部传入的props 只能由父级进行更改
+- 组件自身定义的属性  static 关键字只有类组件有函数组件没有。内部设置的属性不可更改
+
+## 状态：state
+```javaScript
+// 类组件中使用
+class Clock extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {date: "2022"};
+  }
+  
+  render() {
+    return (
+      <div>
+        <h1>Hello, world!</h1>
+        <h2>It is {this.state.date}.</h2>
+      </div>
+    );
+  }
+}
+// 不能直接修改 this.state的值，需要使用this.setState()方法
+
+// 函数组件中需要使用，useState进行定义
+
+import React,{Component,useState} from 'react'
+export default function Children({name}){
+  const [count ,setCount]=useState(0)
+  return(
+    <div>
+      子组件+{name}+{count}
+    </div>
+  )
+} 
+
+```
+**setState有两个参数**
+---
+第一个用来修改state的，可以是一个对象也可以是一个回调函数。  
+第二个参数是一个用于获取最新的state，是一个个回调函数。
+```javaScript
+//第一个参数为对象，会将多个setState()合并成一个去更新，因为this.state是异步更新的，所以不能依据他们的值去计算下一个值。
+
+this.setState({
+  isLiked: !this.state.isLiked
+})
+
+//第一个参数为方法，当第一个参数为方法时，参数可以是上一次state的状态值和上一次props值
+
+this.setState((prevState,props)=>{
+  return{
+    isLiked:!prevState.isLiked
+  }
+})
+```
+## setState是同步的还是异步的
+> setState 不能简单说成“同步”或“异步”，更准确地说是：它是“批量更新的、在 React 的更新机制里异步表现”的。
+
+**为什么大家说它“异步”？**
+---
+因为你调用完 setState 后，不能立刻拿到最新的 state。
+```jsx
+this.setState({ count: this.state.count + 1 });
+console.log(this.state.count);
+
+// console.log 打印的往往还是旧值。
+```
+这是因为：setState 只是发起更新请求，React 会把多次更新合并之后再统一重新渲染。所以从“代码执行顺序”看，它表现得像异步。
+
+React 的“异步”更准确地说是：延迟生效、批处理、由 React 调度，不是 JavaScript 原生意义上的异步。
+---
+
+**在React 18 之前**
+---
+|场景 |表现| 原因|
+|:-------|:-------|:-------|
+|React 合成事件中 |批量更新（看起来像异步）| React 的 batching 机制将|多次 setState 合并为一次渲染
+|setTimeout / Promise / 原生事件中| 同步更新（每次立即触发渲染） 脱|离了 React 的 batching 上下文
+
+```jsx
+// 合成事件：批量更新，只渲染一次
+handleClick = () => {
+  this.setState({ count: this.state.count + 1 });
+  this.setState({ count: this.state.count + 1 });
+  // 最终 count 只 +1，且只触发一次 render
+}
+
+// setTimeout 中：非批量，渲染两次
+handleClick = () => {
+  setTimeout(() => {
+    this.setState({ count: this.state.count + 1 }); // 立即更新+渲染
+    this.setState({ count: this.state.count + 1 }); // 立即更新+渲染
+  }, 0);
+}
+```
+> 注意：即使在"批量更新"场景中，setState 调用本身也是同步的，只是 render 被延迟合并 了。
+---
+**React 18+**
+---
+React 18 引入了 自动批处理，几乎所有场景都统一为批量更新：
+```jsx
+// React 18 中以下全部自动批量更新，只触发一次 render
+
+setTimeout(() => {
+  setCount(c => c + 1);
+  setName('new');
+}, 0);
+
+promise.then(() => {
+  setCount(c => c + 1);
+  setName('new');
+});
+
+nativeElement.addEventListener('click', () => {
+  setCount(c => c + 1);
+  setName('new');
+});
+
+// 如需强制同步刷新（极少数场景），可使用 flushSync：
+import { flushSync } from 'react-dom';
+
+flushSync(() => {
+  setCount(c => c + 1);
+});
+// DOM 已立即更新
+```
+>**总结：** setState 的调用是同步的，但状态更新的生效时机取决于环境:
+>- React 17 及以前：合成事件中批量更新，异步任务/原生事件中同步更新  
+>- React 18+：默认所有场景自动批量更新，行为一致  
+>- 本质原因是 React 的 batching 调度机制，目的是减少不必要的重渲染、提升性能
+>- 如果需要读取最新 state，应使用回调形式 setState(prev => ...) 或 useEffect
+
+## 什么是react合成事件
+>React 对浏览器原生事件进行了一层跨浏览器兼容的封装，这层封装后的事件对象就是合成事件。它不是原生 DOM 事件，而是 React 自己实现的一套事件系统。
+
+### 为什么需要合成事件？
+
+|原生事件的问题|合成事件的解决|
+|:--------|:--------|
+|不同浏览器 API 不一致|统一接口，抹平差异
+|事件绑定分散在各 DOM 上|统一委托到根节点
+|大量监听器导致内存问题|事件池复用（React 16）
+|无法与 React 调度系统集成|天然支持批量更新/batching
+
+### 事件委托
+React 不会把事件处理器绑在具体 DOM 节点上，而是采用事件委托：
+```text
+ ┌──────────────────────┐
+ │   root / document    │  ← 所有事件统一在这里监听
+ ├──────────────────────┤
+ │                      │
+ │   <div onClick={fn}> │  ← 你写的代码（只是注册映射关系）
+ │     <button />       │
+ │   </div>             │
+ │                      │
+ └──────────────────────┘
+
+点击 button → 原生事件冒泡到 root
+           → React 根据内部 fiber 树找到对应的 handler
+           → 构造 SyntheticEvent 并调用 fn
+```
+>React 17+ 委托到挂载的 root 容器；React 16 及以前 委托到 document。
+
+### 常见合成事件类型
+```jsx
+// 鼠标
+onClick, onDoubleClick, onMouseEnter, onMouseLeave, onMouseDown, onMouseUp
+
+// 键盘
+onKeyDown, onKeyUp, onKeyPress(已废弃)
+
+// 表单
+onChange, onInput, onSubmit, onFocus, onBlur
+
+// 触摸/指针
+onTouchStart, onTouchMove, onTouchEnd, onPointerDown
+
+// 其他
+onScroll, onWheel, onDrag, onDrop, onAnimationEnd, onTransitionEnd
+```
+>命名规则：驼峰命名（onclick → onClick），且 preventDefault 必须显式调用（不像 HTML 属性中 return false 即可）。
+
+>**总结：** React 合成事件是对原生事件的跨浏览器封装，核心特点是：
+>- 事件委托：统一绑定到 root 容器，通过 fiber 树分发
+>- 统一接口：抹平浏览器差异，提供一致的 API
+>- 与调度集成：在合成事件上下文中 setState 会自动批量更新
+>- 避免混用：合成事件和原生事件的 stopPropagation 互不影响，混>- 合使用容易出 bug
+
+## react 函数组件和类组件的区别
+|维度| 类组件 (Class)| 函数组件 (Function)
+|:--------|:--------|:--------|
+|定义方式| extends React.Component |普通 JS 函数
+|状态管理| this.state + this.setState| useState / useReducer
+|生命周期| componentDidMount 等| useEffect 统一替代
+|this 指向| 需要绑定，易出错| 无 this，闭包捕获值
+|逻辑复用| HOC / Render Props（嵌套地狱）| Hooks（扁平组合）
+|性能优化| shouldComponentUpdate / PureComponent| React.memo / useMemo / useCallback
+|代码量| 较多，样板代码重| 更少，更聚焦业务逻辑
+|TypeScript |泛型参数复杂 |类型推导更自然
+|官方态度| 仍支持但不再推荐新功能| 主推方向
+
+---
+
+**副作用 & 生命周期映射**
+```text
+类组件生命周期              →   函数组件等价写法
+─────────────────────────────────────────────────
+componentDidMount          →    useEffect(() => {...}, [])
+componentDidUpdate         →    useEffect(() => {...}, [deps])
+componentWillUnmount       →    useEffect(() => { return cleanup }, [...])
+shouldComponentUpdate      →    React.memo / useMemo
+getDerivedStateFromProps   →    渲染期间直接计算 / useMemo
+```
+```jsx
+// 类组件：相关逻辑被拆散到多个生命周期
+class UserPage extends React.Component {
+  componentDidMount() {
+    this.fetchUser(this.props.id);        // 挂载时获取
+    document.title = `User ${this.props.id}`;
+}
+  componentDidUpdate(prevProps) {
+    if (prevProps.id !== this.props.id) {// 更新时重新获取
+      this.fetchUser(this.props.id);
+      document.title = `User ${this.props.id}`;
+    }
+}
+  componentWillUnmount() {
+    this.abortController.abort(); // 清理
+}
+}
+
+// 函数组件：按"关注点"聚合，而非按"时间点"拆分
+function UserPage({ id }) {
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchUser(id, controller.signal);
+    document.title = `User ${id}`;
+    return () => controller.abort();
+}, [id]); // 同一个 effect 涵盖 mount + update + unmount
+}
+
+```
+**闭包陷阱（函数组件独有注意事项）**
+```jsx
+function Timer() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      // ❌ count 永远是首次渲染的值 0（闭包过期）
+      console.log(count);
+    }, 1000);
+    return () => clearInterval(id);
+}, []); // 空依赖 → 闭包永远不更新
+
+// 解法1：函数式更新
+  setCount(prev => prev + 1);
+
+// 解法2：useRef 保存最新值
+  const countRef = useRef(count);
+  countRef.current = count;
+
+// 解法3：正确声明依赖
+// useEffect(() => {...}, [count]);
+}
+```
+
+>**补充：** 可以通过Component.prototype.isReactComponent 区分函数组件和类组件
+```jsx
+export default function FunctionComonent() {
+  if(FunctionComonent.prototype.isReactComponent){
+    console.log('FunctionComonent是类组件')
+    }else{
+      console.log('FunctionComonent函数式组件')
+    }
+}
+```
+
+## 受控组件 vs 非受控组件
+React 有两种不同的方式来处理表单输入。
+
+如果一个 input 表单元素的值是由 React 控制，就其称为受控组件。当用户将数据输入到受控组件时，会触发修改状态的事件处理器，这时由你的代码来决定此输入是否有效（如果有效就使用更新后的值重新渲染）。如果不重新渲染，则表单元素将保持不变。
+
+一个非受控组件，就像是运行在 React 体系之外的表单元素。当用户将数据输入到表单字段（例如 input，dropdown 等）时，React 不需要做任何事情就可以映射更新后的信息。然而，这也意味着，你无法强制给这个表单字段设置一个特定值。在大多数情况下，你应该使用受控组件。
+
+```jsx
+//受控组件： input 表单元素的值是由 React 控制
+import { useState } from "react"
+function Shoukong(){
+  const [val,setVal]=useState("")
+  function add(e){
+    setVal(preval=>e.target.value)
+}
+  return(
+    <div>
+      受控组件:{val}
+      <input type="text" value={val} onChange={add}></input>
+    </div>
+)
+}
+export default Shoukong
+```
+```jsx
+// 非受控组件：自己管理自己的状态
+function Shoukong(){
+  return(
+    <div>
+      非受控组件
+      <input type="text"></input>
+    </div>
+)
+}
+export default Shoukong
+```
+半受控组件 个人的理解
+
+父组件定义state，子组件的input使用state
+```jsx
+//父组件
+import { useState } from "react"
+import Shouzi from "./shouzi"
+function Shoukong(){
+  const [val,setVal]=useState("")
+  function add(e){
+    setVal(preval=>e.target.value)
+}
+  return(
+    <div>
+      受控组件:{val}
+      <input type="text" value={val} onChange={add}></input>
+      <Shouzi val={val}/>
+    </div>
+)
+}
+export default Shoukong
+
+//子组件
+function Shouzi(props){
+    const {val} =props
+    return(
+        <div>
+            个人理解半受控组件
+            <input type="text" value={val}></input>
+        </div>
+    )
+}
+export default Shouzi
+```

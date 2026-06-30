@@ -25,9 +25,9 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    // 默认标题 + 子页面模板标题（如 "JavaScript 基础语法 | 精进手记"）
-    default: '精进手记',
-    template: '%s | 精进手记',
+    // 默认标题 + 子页面模板标题（如 "JavaScript 基础语法 | 乐码手记"）
+    default: '乐码手记',
+    template: '%s | 乐码手记',
   },
   description:
     '记录和分析个人学习笔记的技术知识库网站，分类清晰、搜索便捷',

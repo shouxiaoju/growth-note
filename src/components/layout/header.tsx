@@ -88,7 +88,7 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <BookOpen className="text-primary" size={22} />
             <span className="font-semibold text-foreground hidden sm:inline">
-              精进手记
+              乐码手记
             </span>
           </Link>
 
