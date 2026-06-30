@@ -393,8 +393,8 @@ onScroll, onWheel, onDrag, onDrop, onAnimationEnd, onTransitionEnd
 |状态管理| this.state + this.setState| useState / useReducer
 |生命周期| componentDidMount 等| useEffect 统一替代
 |this 指向| 需要绑定，易出错| 无 this，闭包捕获值
-|逻辑复用| HOC / Render Props（嵌套地狱）| Hooks（扁平组合）
-|性能优化| shouldComponentUpdate / PureComponent| React.memo / useMemo / useCallback
+|逻辑复用| HOC / Render Props（嵌套地狱）| Hooks（扁平组合）
+|性能优化| shouldComponentUpdate / PureComponent| React.memo / useMemo / useCallback
 |代码量| 较多，样板代码重| 更少，更聚焦业务逻辑
 |TypeScript |泛型参数复杂 |类型推导更自然
 |官方态度| 仍支持但不再推荐新功能| 主推方向
@@ -412,124 +412,124 @@ shouldComponentUpdate      →    React.memo / useMemo
 getDerivedStateFromProps   →    渲染期间直接计算 / useMemo
 ```
 ```jsx
-// 类组件：相关逻辑被拆散到多个生命周期
+// 类组件：相关逻辑被拆散到多个生命周期
 class UserPage extends React.Component {
-  componentDidMount() {
-    this.fetchUser(this.props.id);        // 挂载时获取
-    document.title = `User ${this.props.id}`;
+  componentDidMount() {
+    this.fetchUser(this.props.id);        // 挂载时获取
+    document.title = `User ${this.props.id}`;
 }
-  componentDidUpdate(prevProps) {
-    if (prevProps.id !== this.props.id) {// 更新时重新获取
-      this.fetchUser(this.props.id);
-      document.title = `User ${this.props.id}`;
-    }
+  componentDidUpdate(prevProps) {
+    if (prevProps.id !== this.props.id) {// 更新时重新获取
+      this.fetchUser(this.props.id);
+      document.title = `User ${this.props.id}`;
+    }
 }
-  componentWillUnmount() {
-    this.abortController.abort(); // 清理
+  componentWillUnmount() {
+    this.abortController.abort(); // 清理
 }
 }
 
-// 函数组件：按"关注点"聚合，而非按"时间点"拆分
-function UserPage({ id }) {
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchUser(id, controller.signal);
-    document.title = `User ${id}`;
-    return () => controller.abort();
-}, [id]); // 同一个 effect 涵盖 mount + update + unmount
+// 函数组件：按"关注点"聚合，而非按"时间点"拆分
+function UserPage({ id }) {
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchUser(id, controller.signal);
+    document.title = `User ${id}`;
+    return () => controller.abort();
+}, [id]); // 同一个 effect 涵盖 mount + update + unmount
 }
 
 ```
 **闭包陷阱（函数组件独有注意事项）**
 ```jsx
-function Timer() {
-  const [count, setCount] = useState(0);
+function Timer() {
+  const [count, setCount] = useState(0);
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      // ❌ count 永远是首次渲染的值 0（闭包过期）
-      console.log(count);
-    }, 1000);
-    return () => clearInterval(id);
-}, []); // 空依赖 → 闭包永远不更新
+  useEffect(() => {
+    const id = setInterval(() => {
+      // ❌ count 永远是首次渲染的值 0（闭包过期）
+      console.log(count);
+    }, 1000);
+    return () => clearInterval(id);
+}, []); // 空依赖 → 闭包永远不更新
 
-// 解法1：函数式更新
-  setCount(prev => prev + 1);
+// 解法1：函数式更新
+  setCount(prev => prev + 1);
 
-// 解法2：useRef 保存最新值
-  const countRef = useRef(count);
-  countRef.current = count;
+// 解法2：useRef 保存最新值
+  const countRef = useRef(count);
+  countRef.current = count;
 
-// 解法3：正确声明依赖
-// useEffect(() => {...}, [count]);
+// 解法3：正确声明依赖
+// useEffect(() => {...}, [count]);
 }
 ```
 
->**补充：** 可以通过Component.prototype.isReactComponent 区分函数组件和类组件
+>**补充：** 可以通过Component.prototype.isReactComponent 区分函数组件和类组件
 ```jsx
-export default function FunctionComonent() {
-  if(FunctionComonent.prototype.isReactComponent){
-    console.log('FunctionComonent是类组件')
-    }else{
-      console.log('FunctionComonent函数式组件')
-    }
+export default function FunctionComonent() {
+  if(FunctionComonent.prototype.isReactComponent){
+    console.log('FunctionComonent是类组件')
+    }else{
+      console.log('FunctionComonent函数式组件')
+    }
 }
 ```
 
-## 受控组件 vs 非受控组件
-React 有两种不同的方式来处理表单输入。
+## 受控组件 vs 非受控组件
+React 有两种不同的方式来处理表单输入。
 
-如果一个 input 表单元素的值是由 React 控制，就其称为受控组件。当用户将数据输入到受控组件时，会触发修改状态的事件处理器，这时由你的代码来决定此输入是否有效（如果有效就使用更新后的值重新渲染）。如果不重新渲染，则表单元素将保持不变。
+如果一个 input 表单元素的值是由 React 控制，就其称为受控组件。当用户将数据输入到受控组件时，会触发修改状态的事件处理器，这时由你的代码来决定此输入是否有效（如果有效就使用更新后的值重新渲染）。如果不重新渲染，则表单元素将保持不变。
 
-一个非受控组件，就像是运行在 React 体系之外的表单元素。当用户将数据输入到表单字段（例如 input，dropdown 等）时，React 不需要做任何事情就可以映射更新后的信息。然而，这也意味着，你无法强制给这个表单字段设置一个特定值。在大多数情况下，你应该使用受控组件。
+一个非受控组件，就像是运行在 React 体系之外的表单元素。当用户将数据输入到表单字段（例如 input，dropdown 等）时，React 不需要做任何事情就可以映射更新后的信息。然而，这也意味着，你无法强制给这个表单字段设置一个特定值。在大多数情况下，你应该使用受控组件。
 
 ```jsx
-//受控组件： input 表单元素的值是由 React 控制
-import { useState } from "react"
-function Shoukong(){
-  const [val,setVal]=useState("")
-  function add(e){
-    setVal(preval=>e.target.value)
+//受控组件： input 表单元素的值是由 React 控制
+import { useState } from "react"
+function Shoukong(){
+  const [val,setVal]=useState("")
+  function add(e){
+    setVal(preval=>e.target.value)
 }
-  return(
-    <div>
-      受控组件:{val}
-      <input type="text" value={val} onChange={add}></input>
-    </div>
+  return(
+    <div>
+      受控组件:{val}
+      <input type="text" value={val} onChange={add}></input>
+    </div>
 )
 }
-export default Shoukong
+export default Shoukong
 ```
 ```jsx
-// 非受控组件：自己管理自己的状态
-function Shoukong(){
-  return(
-    <div>
-      非受控组件
-      <input type="text"></input>
-    </div>
+// 非受控组件：自己管理自己的状态
+function Shoukong(){
+  return(
+    <div>
+      非受控组件
+      <input type="text"></input>
+    </div>
 )
 }
-export default Shoukong
+export default Shoukong
 ```
-半受控组件 个人的理解
+半受控组件 个人的理解
 
 父组件定义state，子组件的input使用state
 ```jsx
 //父组件
-import { useState } from "react"
-import Shouzi from "./shouzi"
-function Shoukong(){
-  const [val,setVal]=useState("")
-  function add(e){
-    setVal(preval=>e.target.value)
+import { useState } from "react"
+import Shouzi from "./shouzi"
+function Shoukong(){
+  const [val,setVal]=useState("")
+  function add(e){
+    setVal(preval=>e.target.value)
 }
-  return(
-    <div>
-      受控组件:{val}
-      <input type="text" value={val} onChange={add}></input>
-      <Shouzi val={val}/>
-    </div>
+  return(
+    <div>
+      受控组件:{val}
+      <input type="text" value={val} onChange={add}></input>
+      <Shouzi val={val}/>
+    </div>
 )
 }
 export default Shoukong
@@ -540,7 +540,7 @@ function Shouzi(props){
     return(
         <div>
             个人理解半受控组件
-            <input type="text" value={val}></input>
+            <input type="text" value={val}></input>
         </div>
     )
 }
