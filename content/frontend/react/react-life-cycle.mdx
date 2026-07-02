@@ -1,0 +1,141 @@
+---
+title: React 生命周期
+description: react生命周期
+date: 2026-0-01
+tags: [React]
+category: frontend/react
+order: 2
+---
+# React生命周期
+## 组件的挂载阶段
+### constructor
+1. 通过super将绑定在组件上的props赋值给this.props
+2. 定义state
+3. 可以绑定this指向
+### omponentWillMount(首次渲染前执行)
+1. 组件将要挂载，用于初始化事件和生命周期。
+2. react内部完成任务。(弃用)
+3. 可以得到数据，也可以操作数据，无法获取dom，虚拟dom也没有。
+### render(渲染组件)
+1. 底层为 React.createElement
+2. 解析this.props和this.state
+3. 生产虚拟dom
+4. 注意：不能使用this.setState
+### componentDidMount(render渲染之后执行的操作)
+组件装载之后调用，此时可以获取到DOM节点并操作，服务器请求。
+
+## 更新阶段
+### componentWillReceiveProps (nextPro)
+1. 接收一个参数nextProps
+2. 当父组件更新子组件state时，该方法会被调用。自身的state改变不会触发。
+### shouldComponentUpdate (nextProps, nextState)
+1. 接收两个参数：nextProps, nextState表示最新的值
+2. 该方法决定组件state或props的改变是否需要重新渲染组件。
+3. 只要写必须有返回值，布尔值。决定组件是否更新。
+### componentWillUpdate 
+1. 在组件接受新的state或者props时，即将进行重新渲染前调用该方法。
+2. 不能调用setState
+### componentDidUpdate 
+1. 组件渲染结束，真实dom生成
+2. 不能调用setState
+
+## 卸载阶段
+### componentWillUnmoun
+当组件被卸载或者销毁了就会调用，我们可以在这个函数里去清除一些定时器，取消网络请求，清理无效的DOM元素等垃圾清理工作。
+
+## 新增生命周期
+### static getDerivedStateFromProps(nextProps, prevState)
+用于替换componentWillReceiveProps可以用来控制 props 更新 state 的过程；它返回一个对象表示新的 state；如果不需要更新，返回 null 即可
+
+componentWillReceiveProps只有父组件更新时子组件才会触发，子组件本身改变不会触发。		  getDerivedStateFromProps在每次渲染之前都会调用，不管初始挂载还是后面的更新都会调用。
+```jsx
+static getDerivedStateFromProps(nextProps, prevState) {
+  
+  const {type} = nextProps;
+  
+  // 当传入的type发生变化的时候，更新state
+  
+  if (type !== prevState.type) {
+    
+    return {
+      
+      type,
+      
+    };
+    
+  }
+  
+  // 否则，对于state不进行任何操作
+  
+  return null;
+  
+}
+```
+### getSnapshotBeforeUpdate()
+用于替换 componentWillUpdate。会在最终render之前调用，在getSnapshotBeforeUpdate()读取到的Dom元素状态可以保证是最新的。
+
+## 错误捕获阶段
+### componentDidCatch(error, errorInfo)
+1. 捕获子组件throw出来的错误。
+2. 接收两个参数：error, errorInfo
+### static getDerivedStateFromError()
+此生命周期会在后代组件抛出错误后被调用。 它将抛出的错误作为参数，并返回一个值以更新 state
+```jsx
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  
+  static getDerivedStateFromError(error) {
+    // 更新 state 使下一次渲染可以显降级 UI
+    return { hasError: true };
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      // 你可以渲染任何自定义的降级  UI
+      return <h1>Something went wrong.</h1>;
+    }
+    
+    return this.props.children; 
+  }
+}
+```
+## React Hooks模拟生命周期
+## useEffect 
+拥有两个参数:
+
+第一个参数作为回调函数会在浏览器布局和绘制完成后调用，因此它不会阻碍浏览器的渲染进程。
+
+第二个参数是一个数组
+1. 当数组存在并有值时，如果数组中的任何值发生更改，则每次渲染后都会触发回调。componentDidUpdate
+2. 当它不存在时，每次渲染后都会触发回调。
+3. 当它是一个空列表时，回调只会被触发一次，类似于 componentDidMount。
+4. 当返回一个函数时，这个函数会在组件卸载前被调用。我们可以在这里面清除定时器或事件监听器。类似于componentWillUnmoun
+
+## A组件嵌套B组件生命周期执行顺序
+**初始化阶段：**  
+A组件的constructor  
+A组件的componentWillMount  
+A组件的render  
+B组件的constructor  
+B组件的componentWillMount  
+B组件的render  
+B组件的componentDidMount  
+A组件的componentDidMount 
+
+**更新阶段：**  
+A组件的shouldComponentUpdate  
+A组件的componentWillUpdate  
+A组件的render  
+B组件的componentWillReceiveProps  
+B组件的shouldComponentUpdate  
+B组件的componentWillUpdate  
+B组件的render  
+B组件的componentDidUpdate  
+A组件的componentDidUpdate  
+
+**卸载阶段：**  
+B组件的  componentWillUnmount  
+A组件的   componentWillUnmount
