@@ -25,7 +25,7 @@ export function Footer() {
             rel="noopener noreferrer"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            备案号：豫ICP备2026027954号-1
+            豫ICP备2026027954号-1
           </a>
 
           {/* 站内导航 */}
