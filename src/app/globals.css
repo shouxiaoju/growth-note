@@ -226,9 +226,9 @@ body {
   @apply bg-muted text-primary rounded px-1.5 py-0.5 text-sm font-mono;
 }
 
-/* 代码块：圆角容器 + 横向滚动 */
+/* 代码块：圆角容器 + 自动换行（white-space 通过 mdxComponents pre 内联 style 控制） */
 .article-content pre {
-  @apply bg-muted rounded-lg p-4 my-4 overflow-x-auto;
+  @apply bg-muted rounded-lg p-4 my-4 overflow-x-hidden;
 }
 
 /* 代码块内的 code 标签：去除行内代码的额外样式 */

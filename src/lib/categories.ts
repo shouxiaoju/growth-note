@@ -76,6 +76,7 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
     icon: 'sparkles',
     description: 'Prompt · Agent · RAG · 工具链 · 大模型',
     children: {
+      'server-sent-events': 'SSE 流式输出',
       'prompt-engineering': 'Prompt 工程',
       'agent-development': 'Agent 开发',
       'ai-tools': 'AI 工具',

@@ -8,11 +8,17 @@
  *
  * MDX 组件映射说明：
  *   h2-h4 → 带锚点的标题（id 用于 TOC 跳转）
- *   pre → 代码块容器（圆角、背景色、横向滚动）
- *   code → 行内代码（背景色、圆角、等宽字体）
  *   table → 带边框和条纹的表格
  *   blockquote → 左侧蓝色竖线引用块
  *   a → 带 hover 效果的链接
+ *
+ * 代码样式说明：
+ *   pre / code 不在 mdxComponents 中覆写，而是通过外层 .article-content
+ *   容器的 CSS 级联规则统一控制（见 globals.css），避免 JS 端 parentName
+ *   检测不可靠的问题：
+ *     - .article-content code        → 行内代码：浅背景 + 圆角 + 等宽
+ *     - .article-content pre         → 代码块容器：圆角 + 背景 + 横向滚动
+ *     - .article-content pre code    → 代码块内代码：bg-transparent（无背景）
  *
  * 注意：本组件为客户端组件，因为 next-mdx-remote 的 MDXRemote
  *       需要在客户端环境中序列化和反序列化 MDX 内容。
@@ -59,23 +65,12 @@ const mdxComponents = {
   p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
     <p {...props} className="text-foreground leading-7 mb-4" />
   ),
-  // 代码块容器
+  // 代码块容器：自动换行
   pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
     <pre
       {...props}
-      className="bg-code-background text-foreground rounded-lg p-4 overflow-x-auto my-4 text-sm border border-border"
-    />
-  ),
-  // 行内代码
-  code: (props: React.HTMLAttributes<HTMLElement>) => (
-    <code
-      {...props}
-      className={`bg-muted text-foreground px-1.5 py-0.5 rounded text-sm font-mono ${
-        // 如果父元素是 pre（代码块），则不添加额外的内联样式
-        (props as { parentName?: string }).parentName === 'pre'
-          ? 'bg-transparent p-0'
-          : ''
-      }`}
+      className="bg-muted text-foreground rounded-lg p-4 my-4 text-sm border border-border overflow-x-hidden"
+      style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', overflowWrap: 'break-word' }}
     />
   ),
   // 超链接：新窗口打开 + hover 效果
@@ -163,5 +158,9 @@ export function ArticleContent({ content }: ArticleContentProps) {
     );
   }
 
-  return <MDXRemote {...mdxSource} components={mdxComponents} />;
+  return (
+    <div className="article-content">
+      <MDXRemote {...mdxSource} components={mdxComponents} />
+    </div>
+  );
 }

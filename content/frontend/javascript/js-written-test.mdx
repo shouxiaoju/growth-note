@@ -1,0 +1,180 @@
+---
+title: js 笔试题
+description: 遇到的一些笔试题
+date: 2026-07-10
+tags: [JavaScript]
+category: frontend/javascript
+order: 2
+---
+# js 笔试题
+
+## 爬楼梯
+题目描述
+```text
+假设你正在爬楼梯。需要 n 阶你才能到达楼顶。
+
+每次你可以爬 1 或 2 个台阶。你有多少种不同的方法可以爬到楼顶呢？
+
+示例 1：
+  输入：n = 2
+  输出：2
+  解释：有两种方法可以爬到楼顶。
+  1. 1 阶 + 1 阶
+  2. 2 阶
+
+示例 2：
+  输入：n = 3
+  输出：3
+  解释：有三种方法可以爬到楼顶。
+  1. 1 阶 + 1 阶 + 1 阶
+  2. 1 阶 + 2 阶
+  3. 2 阶 + 1 阶
+
+```
+内容分析
+```text
+  这是一个基础动态规划类型的题目
+
+  第一阶台阶：只有1种
+  第二阶台阶：2种
+  第三阶台阶：3种
+  ...
+  第n阶台阶：n = n-1 + n-2
+
+我们只需要记录一下前两次的走法即可。
+
+```
+
+代码实现
+```javaScript
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var climbStairs = function(n) {
+    let num1 = 1;
+    let num2 = 2;
+    let sum = 0;
+    if(n <=2 ) return n;
+    for(let i=3; i<= n ; i++){
+        sum = num1 + num2;
+        num1 = num2;
+        num2= sum;
+    }
+    return sum
+};
+
+```
+
+## 并发控制
+题目描述
+```javaScript
+function timeout(time){
+    return new Promise(resolve => {
+        setTimeout(resolve, time)
+    });
+}
+
+class SuperTask{
+/* 请补充代码实现此功能 */
+}
+
+const superTask = new SuperTask();
+
+function addTask(time, name) {
+   superTask
+    .add(()=> timeout(time))
+    .then(()=>{
+        console.log(`任务${name}完成`);
+    })
+}
+
+addTask(10000, 1); // 10000ms后输出：任务1完成
+addTask(5000, 2); // 5000ms后输出：任务2完成
+addTask(3000, 3); // 8000ms后输出：任务3完成
+addTask(4000, 4); // 12000ms后输出：任务4完成
+addTask(5000, 5); // 15000ms后输出：任务5完成
+
+/*预期结果：
+    任务2完成
+    任务3完成
+    任务1完成
+    任务4完成
+    任务5完成
+/*
+```
+内容分析
+```text
+通过示例内容可以发现，这是一个并发控制的题目，且并发数为2
+
+实现思路：
+  可以看成是一群人去服务大厅办理业务，大厅中有两个业务窗口，每个窗口只能处理一个事务，那么可以同时处理两个事务。  
+  但一来来了很多人，怎么办呢，去取号排队，处理完一个人的事务业务员就会叫号。
+  通过这样一个方式来处理问题。
+
+```
+代码实现
+```javaScript
+
+// 并发控制
+
+function timeout(time){
+    return new Promise(resolve => {
+        setTimeout(resolve, time)
+    });
+}
+
+class SuperTask{
+    constructor(paralleCount = 2){
+        this.tasks = []; // 存储任务队列
+        this.paralleCount = paralleCount; // 并发数
+        this.runningCount = 0; // 正在执行的任务数
+    }
+    // 通过示例可以看出add方法一定是返回一个promise，add方法可以看成是一个取号机，负责将任务加入任务队列，然后通知人员可以开始叫号了。
+    add(task){
+        return new Promise((resolve, reject) => {
+            // 将任务加入任务队列
+            this.tasks.push({ task, resolve, reject });
+            // 开始叫号
+            this._run();
+        })
+    }
+    // 执行任务， 叫号
+    _run(){
+      // 如果正在执行的任务数小于并发数且有任务
+        while(this.runningCount < this.paralleCount && this.tasks.length){
+          // 取出第一个任务
+            const { task, resolve, reject } = this.tasks.shift();
+            // 正在执行的任务+1
+            this.runningCount++;
+            // 开始执行任务
+            task()
+            .then(resolve)
+            .catch(reject)
+            .finally(()=>{ // 等任务执行完成
+              // 正在执行的任务-1
+                this.runningCount--
+              // 开始叫号
+                this._run();
+            })
+        }
+    }
+}
+
+const superTask = new SuperTask();
+
+function addTask(time, name) {
+   superTask
+    .add(()=> timeout(time))
+    .then(()=>{
+        console.log(`任务${name}完成`);
+    })
+}
+
+addTask(10000, 1); // 10000ms后输出：任务1完成
+addTask(5000, 2); // 5000ms后输出：任务2完成
+addTask(3000, 3); // 8000ms后输出：任务3完成
+addTask(4000, 4); // 12000ms后输出：任务4完成
+addTask(5000, 5); // 15000ms后输出：任务5完成
+
+```
