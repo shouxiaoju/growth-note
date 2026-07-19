@@ -33,6 +33,7 @@ import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 import { useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import SseDemoPage from '@/app/demo/sse/page';
 
 interface ArticleContentProps {
   content: string; // 已去除 frontmatter 的 MDX 正文
@@ -134,6 +135,7 @@ const mdxComponents = {
   TabsList,
   TabsTrigger,
   TabsContent,
+  SseDemoPage
 };
 
 export function ArticleContent({ content }: ArticleContentProps) {
