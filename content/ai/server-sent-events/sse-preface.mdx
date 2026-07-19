@@ -12,13 +12,48 @@ order: 1
 
 ## 学习路径
 
-### 第一步：理解核心概念
-阅读 [核心概念](./sse-core-concept.mdx)，了解：
+### 第一步：理解核心概念及基础实现
+阅读 [核心概念](./sse-core-concept)，了解：
 - 什么是 SSE
 - SSE 与 WebSocket 的区别
 - 增量拼接的原理以及如何实现增量拼接
-- 流式输出的价值已经实现
+- 流式输出的价值以及实现
 - SSE 流式输出 - 基础服务端搭建
 - SSE 流式输出 - 基础功能实现
+- EventSource API 的使用
 
+### 第二部: Fetch + ReadableStream 手动解析
+在 React 项目中，fetch + ReadableStream 是实现流式输出的核心底层技术
+```
+浏览器 ←→ 服务器
+   │          │
+   │  1. fetch POST /api/chat
+   │  2. 服务器返回 ReadableStream (Transfer-Encoding: chunked)
+   │  3. 浏览器通过 response.body.getReader() 逐块读取
+   │  4. 每读取一块，更新 React 状态 → UI 实时渲染
+   └──────────┘
+```
+
+### 第三步: requestIdleCallback 在流式输出中的应用
+了解：
+- requestIdleCallback 是什么，为什么在流式渲染中很有用
+- 与 setTimeout 的核心区别
+- 在 SSE 增量拼接中的 5 种典型应用模式
+- 性能对比数据和最佳实践
+
+### 第四步：深入增量渲染 Markdown
+了解：
+- 流式 Markdown 渲染的核心技术链路
+- 三种渲染策略的对比（全量 / 增量块 / idleCallback）
+- 自动滚动控制、代码高亮、XSS 安全等实战技巧
+- 生产环境推荐方案（含完整代码）
+
+### 第五步：实现企业级方案
+
+企业级特性：
+- 自动断线重连（指数退避）
+- 心跳保活机制
+- 断点续传（Last-Event-ID）
+- 多客户端管理
+- 性能监控
 

@@ -78,10 +78,10 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
     children: {
       'server-sent-events': 'SSE 流式输出',
       'prompt-engineering': 'Prompt 工程',
-      'agent-development': 'Agent 开发',
-      'ai-tools': 'AI 工具',
-      rag: 'RAG',
-      llm: '大模型',
+      //'agent-development': 'Agent 开发',
+      //'ai-tools': 'AI 工具',
+      //rag: 'RAG',
+      //llm: '大模型',
     },
   },
 };

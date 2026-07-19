@@ -1,0 +1,656 @@
+---
+title: SSE 核心概念及基础实现
+description: SSE 核心概念及基础实现。
+date: 2026-07-18
+tags: [AI, SSE, 流式输出]
+category: ai/server-sent-events
+order: 2
+---
+
+# SSE 核心概念及基础实现
+
+## 什么是 SSE (Server-Sent Events)
+SSE 是一种基于 HTTP 的**单向实时通信协议**，允许服务器向客户端推送数据流。
+
+可以把 SSE 想象成服务器对客户端的单向广播频道——客户端订阅后，服务器有新消息时就会自动推送过来，不需要客户端反复询问。
+
+
+### SSE 与 WebSocket 的区别
+
+| 特性 | SSE | WebSocket |
+|------|-----|-----------|
+| 通信方向 | 单向（服务器 → 客户端） | 双向 |
+| 协议 | HTTP | WS/WSS |
+| 数据格式 | 文本（UTF-8） | 文本/二进制 |
+| 自动重连 | ✅ 内置支持 | ❌ 需手动实现 |
+| 断线恢复 | ✅ 支持 Last-Event-ID | ❌ 需手动实现 |
+| 实现复杂度 | 低 | 中 |
+| 适用场景 | AI 流式输出、通知推送 | 聊天、游戏、协作编辑 |
+
+
+### 快速决策指南
+```text
+你的应用需要客户端频繁向服务器发数据吗？
+├─ 是 → WebSocket
+│   └─ 例子：聊天、在线游戏、协同编辑
+└─ 否 → SSE
+    └─ 例子：通知、股票行情、进度条、新闻推送、日志流
+```
+**一句话总结：**WebSocket 是双向高速公路，适合你来我往的实时对话；SSE 是单向信息管道，适合服务器持续向你推送消息。选择时看你的数据流向，而不是技术复杂度。
+
+
+### SSE 协议格式详解
+
+**协议格式**
+```
+id: 1                    ← 事件ID（可选，用于断线恢复）
+retry: 3000              ← 重连间隔（毫秒）告诉客户端在连接断开后等待多少毫秒再重连。
+event: message           ← 事件类型（可选）用于区分不同的事件类型，方便客户端分类处理。
+data: {"content": "你"}   ← 数据内容（必填）
+
+data: {"content": "好"}   ← 没有event字段时，触发默认message事件
+
+event: done              ← 自定义事件类型
+data: [DONE]             ← 结束标志
+
+```
+
+#### event - 事件类型字段
+用于区分不同的事件类型，方便客户端分类处理。
+```text
+event: user-login\n
+data: {"username": "李四"}\n
+\n
+
+event: new-message\n
+data: {"content": "大家好"}\n
+\n
+
+event: user-logout\n
+data: {"username": "李四"}\n
+\n
+```
+```javascript
+eventSource.addEventListener('user-login', (event) => {
+  const user = JSON.parse(event.data);
+  showNotification(`${user.username} 上线了`);
+});
+
+eventSource.addEventListener('new-message', (event) => {
+  const msg = JSON.parse(event.data);
+  displayMessage(msg);
+});
+```
+
+**关键规则：**
+- 每条消息以 `data:` 开头
+- 多个字段之间用**空行**分隔，即两个连续的换行符 （\n\n）
+- 多行数据需要多个 `data:` 行
+- 数据必须是 UTF-8 编码的文本
+
+## 实现一个基础的 SSE 服务器
+>使用node.js实现一个基础的SSE服务
+
+```javascript
+
+const http = require('http'); // HTTPS 服务器/客户端
+const fs = require('fs'); // 文件操作
+const path = require('path'); // 处理文件路径
+
+const PORT = 3000; // 监听的端口号
+
+// 创建 HTTP 服务器
+const server = http.createServer((req, res) => {
+  // 1. 处理静态文件（前端页面）
+  if (req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); // 设置响应头
+    // 创建读取流，指向 index.html 文件,通过 .pipe(res) 将文件内容直接传输到 HTTP 响应
+    fs.createReadStream(path.join(__dirname, '../client/index.html')).pipe(res);
+    return;
+  }
+
+  // 2. 处理 SSE 请求
+  if (req.url === '/sse') {
+    // 【关键】设置 SSE 响应头
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',      // SSE 必须的 MIME 类型
+      'Cache-Control': 'no-cache',               // 禁止缓存
+      'Connection': 'keep-alive',                // 保持连接
+    });
+
+    // 模拟流式数据发送
+    const messages = 'Server-Sent Events（SSE）是一种服务器向客户端推送实时数据的技术。与传统的 HTTP 请求-响应模式不同，SSE 允许服务器在建立连接后，持续向客户端单向发送数据流。这使得它非常适合 AI 流式对话、实时通知、股票行情等场景。'
+
+    let index = 0;
+    const timer = setInterval(() => {
+      if (index < messages.length) {
+        // 【关键】SSE 数据格式：data: xxx\n\n
+        res.write(`data: ${messages[index]}\n\n`); // 每个字段后必须以\n\n否则就是以一条内容返回的而不是流式数据返回
+        index++;
+      } else {
+        // 发送结束标记
+        res.write('data: [DONE]\n\n');
+        clearInterval(timer); // 清除定时器
+        res.end(); // 结束响应
+      }
+    }, 100); // 每 100ms 发送一个字符
+
+    // 客户端断开连接时的清理
+    req.on('close', () => {
+      console.log('客户端断开连接');
+      clearInterval(timer);
+    });
+
+    return;
+  }
+})
+
+```
+## 什么是增量拼接
+增量拼接是指：**客户端接收到多个小数据块后，逐步累积拼接成完整内容的过程**。
+### 为什么需要增量拼接
+```
+场景：AI 流式输出
+
+传统模式：
+[等待 5 秒] → 收到完整回答 → 渲染
+
+流式模式：
+[0.1s] 收到 "你"     → 渲染 "你"
+[0.2s] 收到 "好"     → 渲染 "你好"
+[0.3s] 收到 "，"     → 渲染 "你好，"
+[0.4s] 收到 "我是"   → 渲染 "你好，我是"
+...
+```
+### 拼接策略
+#### 策略1：直接追加（简单场景）
+```javascript
+let fullContent = '';
+
+function onMessage(chunk) {
+  fullContent += chunk.content;  // 直接追加
+  render(fullContent);
+}
+```
+#### 策略2：Token 级拼接（复杂场景）
+```javascript
+// 处理中英文混合、标点、换行等边界情况
+function onMessage(chunk) {
+  const token = chunk.content;
+  
+  // 处理特殊字符
+  if (token === '\\n') {
+    fullContent += '\n';
+  } else if (token === '<br>') {
+    fullContent += '<br>';
+  } else {
+    fullContent += token;
+  }
+  
+  // 处理 Markdown 渲染边界
+  renderWithMarkdown(fullContent);
+}
+```
+
+#### 策略3：Buffer 缓冲（高性能场景）
+```javascript
+const buffer = [];
+let renderTimer = null;
+
+function onMessage(chunk) {
+  buffer.push(chunk.content);
+  
+  // 节流渲染，避免频繁 DOM 操作
+  if (!renderTimer) {
+    renderTimer = setTimeout(() => {
+      fullContent += buffer.join('');
+      buffer.length = 0;
+      render(fullContent);
+      renderTimer = null;
+    }, 50); // 50ms 节流
+  }
+}
+```
+
+## 前端页面实现流式输出
+
+<Tabs defaultValue="js">
+    <TabsList>
+        <TabsTrigger value="js">js</TabsTrigger>
+        <TabsTrigger value="html">html</TabsTrigger>
+        <TabsTrigger value="css">css</TabsTrigger>
+    </TabsList>
+    <TabsContent value="js">
+
+      ```javascript
+        let eventSource1 = null; // EventSource 实例
+        let fullContent1 = ''; // 要显示的文案用来增量拼接
+        let count1 = 0; // 接收次数
+        let startTime1 = null; // 开始时间，用来计算首字延迟
+
+        const startBtn1 = document.getElementById('startBtn1'); // 开始接收
+        const stopBtn1 = document.getElementById('stopBtn1');   // 断开连接
+        const status1 = document.getElementById('status1');     // 链接状态
+        const output1 = document.getElementById('output1');     // 展示区域
+        const rawData1 = document.getElementById('rawData1');   // 展示原始数据流
+        const countEl1 = document.getElementById('count1');     // 接受次数
+        const charsEl1 = document.getElementById('chars1');     // 总字符数
+        const latencyEl1 = document.getElementById('latency1'); // 首字延迟
+
+        // 开始接收
+        function startSSE1() {
+          fullContent1 = ''; 
+          count1 = 0; 
+          startTime1 = Date.now();
+
+          output1.innerHTML = '<span class="cursor"></span>'; // <span class="cursor"></span>模拟光标
+          rawData1.innerHTML = '';
+
+          // 创建连接
+          eventSource1 = new EventSource('/sse');
+
+          // 连接打开时
+          eventSource1.onopen = () => {
+            status1.textContent = '已连接';
+            status1.className = 'status connected';
+            startBtn1.disabled = true; // 禁用开始接收按钮
+            stopBtn1.disabled = false;
+          };
+
+          // 监听默认消息事件
+          eventSource1.onmessage = (event) => {
+            const data = event.data;
+            if (data === '[DONE]') { // 如果发送完毕
+              eventSource1.close(); // 关闭 SSE 连接(不会自动重连)
+              status1.textContent = '已完成'; 
+              status1.className = 'status disconnected';
+              startBtn1.disabled = false; 
+              stopBtn1.disabled = true;
+              output1.innerHTML = fullContent1;
+              return;
+            }
+            // 增量拼接
+            fullContent1 += data; 
+            count1++;
+            output1.innerHTML = fullContent1 + '<span class="cursor"></span>';
+            rawData1.innerHTML += '<div class="event-item">[' + count1 + '] data: "' + data + '"</div>';
+            rawData1.scrollTop = rawData1.scrollHeight;
+            countEl1.textContent = count1; 
+            charsEl1.textContent = fullContent1.length;
+            if (count1 === 1) latencyEl1.textContent = (Date.now() - startTime1) + 'ms';
+          };
+
+          eventSource1.onerror = () => {
+            status1.textContent = '连接错误'; 
+            status1.className = 'status disconnected';
+            startBtn1.disabled = false; 
+            stopBtn1.disabled = true; 
+            eventSource1.close();
+          };
+        }
+        // 断开连接
+        function stopSSE1() {
+          if (eventSource1) { 
+            eventSource1.close(); 
+            eventSource1 = null; 
+          }
+          status1.textContent = '已断开'; 
+          status1.className = 'status disconnected';
+          startBtn1.disabled = false; 
+          stopBtn1.disabled = true;
+        }
+        // 绑定方法
+        startBtn1.addEventListener('click', startSSE1);
+        stopBtn1.addEventListener('click', stopSSE1);
+      ```
+
+    </TabsContent>
+    <TabsContent value="html">
+        ```html
+            <!DOCTYPE html>
+            <html lang="zh-CN">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Document</title>
+                <link rel="stylesheet" href="./index.css">
+            </head>
+            <body>
+                <div class="container">
+                  <h1>🌊 SSE 流式输出演示</h1>
+                  <!-- ====== Demo 1：EventSource ====== -->
+                  <div class="demo-section">
+                    <h2>📡 Demo 1：EventSource API</h2>
+                    <div><span class="status disconnected" id="status1">未连接</span></div>
+                    <div>
+                      <button class="btn" id="startBtn1">开始接收</button>
+                      <button class="btn btn-danger" id="stopBtn1" disabled>断开连接</button>
+                    </div>
+                    <h3 style="margin-top:20px;margin-bottom:10px;">📝 增量拼接结果：</h3>
+                    <div class="output-area" id="output1">点击"开始接收"按钮开始...<span class="cursor"></span></div>
+                    <h3 style="margin-top:20px;margin-bottom:10px;">📦 原始数据流：</h3>
+                    <div class="raw-data" id="rawData1">等待接收数据...</div>
+                    <div class="stats">
+                      <div class="stat-item">
+                        <div class="label">接收次数</div>
+                        <div class="value" id="count1">0</div>
+                      </div>
+                      <div class="stat-item">
+                        <div class="label">总字符数</div>
+                        <div class="value" id="chars1">0</div>
+                      </div>
+                      <div class="stat-item">
+                        <div class="label">首字延迟</div>
+                        <div class="value" id="latency1">-</div>
+                      </div>
+                    </div>
+                    <div class="explanation">
+                      <strong>💡 这里发生了什么？</strong><br>
+                      1. 使用 <code>EventSource</code> API 连接 <code>/sse</code> 端点<br>
+                      2. 服务器每 100ms 发送一个字符：<code>data: 字\n\n</code><br>
+                      3. 客户端每次收到数据，<strong>追加</strong>到已有内容（增量拼接）
+                    </div>
+                  </div>
+                </div>
+            </body>
+            <script src='./index.js'></script>
+            </html>
+        ```
+    </TabsContent>
+    <TabsContent value="css">
+    ```css
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .demo-section {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .demo-section h2 {
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #667eea;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+
+      .btn-stress {
+        background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
+      }
+
+      .output-area {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 8px;
+        padding: 20px;
+        min-height: 200px;
+        font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-y: auto;
+        max-height: 400px;
+      }
+
+      .output-area .cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1em;
+        background: #667eea;
+        animation: blink 1s infinite;
+        vertical-align: middle;
+        margin-left: 2px;
+      }
+
+      @keyframes blink {
+
+        0%,
+        50% {
+          opacity: 1
+        }
+
+        51%,
+        100% {
+          opacity: 0
+        }
+      }
+
+      .raw-data {
+        background: #f5f5f5;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+        font-size: 12px;
+        color: #666;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+      .raw-data .event-item {
+        padding: 5px 0;
+        border-bottom: 1px dashed #ddd;
+      }
+
+      .raw-data .event-item:last-child {
+        border-bottom: none;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        margin-bottom: 15px;
+      }
+
+      .status.connected {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.disconnected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status.connecting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .stats {
+        display: flex;
+        gap: 20px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+
+      .stat-item {
+        background: #f0f0f0;
+        padding: 10px 20px;
+        border-radius: 8px;
+      }
+
+      .stat-item .label {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .stat-item .value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .explanation {
+        background: #e8f4fd;
+        border-left: 4px solid #667eea;
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 0 8px 8px 0;
+        font-size: 14px;
+        color: #555;
+      }
+
+      .explanation code {
+        background: #fff;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+        color: #d63384;
+      }
+
+      .compare-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      @media (max-width: 800px) {
+        .compare-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .compare-panel {
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      .compare-panel.fast {
+        border-color: #3fb950;
+      }
+
+      .compare-panel.slow {
+        border-color: #f85149;
+      }
+
+      .compare-panel h3 {
+        margin-bottom: 15px;
+        font-size: 16px;
+      }
+
+      .compare-panel h3 .badge {
+        display: inline-block;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-left: 8px;
+      }
+
+      .badge-green {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .badge-red {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .fps-bar {
+        height: 6px;
+        background: #e0e0e0;
+        border-radius: 3px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+
+      .fps-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s;
+      }
+
+      .fps-bar-fill.good {
+        background: #3fb950;
+      }
+
+      .fps-bar-fill.bad {
+        background: #f85149;
+      }
+
+      .stress-indicator {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 10px;
+      }
+
+      .stress-on {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .stress-off {
+        background: #d4edda;
+        color: #155724;
+      }
+      ```
+    </TabsContent>
+</Tabs>

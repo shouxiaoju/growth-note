@@ -32,6 +32,7 @@ import rehypeHighlight from 'rehype-highlight';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 import { useEffect, useState } from 'react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface ArticleContentProps {
   content: string; // 已去除 frontmatter 的 MDX 正文
@@ -128,6 +129,11 @@ const mdxComponents = {
       alt={props.alt || ''}
     />
   ),
+  // shadcn/ui Tabs 组件 — 在 MDX 中可直接使用 <Tabs> <TabsList> <TabsTrigger> <TabsContent>
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 };
 
 export function ArticleContent({ content }: ArticleContentProps) {

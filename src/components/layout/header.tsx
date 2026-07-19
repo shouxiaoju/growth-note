@@ -73,6 +73,7 @@ export function Header() {
   const navLinks = [
     { href: '/docs/frontend/html', label: '前端开发' },
     { href: '/docs/backend/java', label: '后端开发' },
+    { href: '/docs/ai/server-sent-events', label: 'AI / 智能开发' },
     { href: '/about', label: '关于' },
   ];
 
