@@ -1,6 +1,6 @@
 ---
-title: JavaScript To Python
-description: 从JavaScript到Python：前端开发者极速入门
+title: Python 基础
+description: Python：前端开发者极速入门
 date: 2026-06-22
 tags: [python, JavaScript]
 category: backend/python
@@ -11,35 +11,20 @@ order: 1
 >作为一个前端开发者，已经掌握了js，学习Python不是从零开始，而是换一种语法表达你已经理解的概念。
 
 ## 命名规范
-
-**相同点：**
 - 第一个字符必须以字母（a-z, A-Z）或下划线
 - 大小写敏感
 - 禁止使用保留关键字，如 if、for、class 等不能作为标识符。
+- Python 使用下划线分隔单词，如 snake_case或者使用驼峰命名法，如 camelCase
 
-**不同点：**
-- Python 使用下划线分隔单词，如 snake_case而js使用驼峰命名法，如 camelCase
-
-|特性|JavaScript|Python|
-|:-------|:--------|:--------|
-|普通变量/函数|camelCase (小驼峰命名法)|snake_case (蛇形命名法)|
-|类名 (Class)|PascalCase (大驼峰)|PascalCase (大驼峰)|
-|常量 (Constant)|UPPER_SNAKE_CASE (常见)|UPPER_SNAKE_CASE|
+|特性||Python|
+|:-------|:--------|
+|普通变量/函数|camelCase (小驼峰命名法) or snake_case (蛇形命名法)|
+|类名 (Class)|PascalCase (大驼峰)|
+|常量 (Constant)|UPPER_SNAKE_CASE|
 ---
 
 ## 代码风格
-
-|JavaScript|Python|
-|:-------|:--------|
-|花括号{}+分号;|缩进（4空格）+冒号:|
-
-```javascript
-if(true){
-    console.log('true');
-}else{
-    console.log('false');
-}
-```
+缩进（4空格）+冒号:|
 ```python
 if True:
     print ("True")
@@ -60,20 +45,6 @@ print(total) # 输出为 6
 ---
 
 ## 注释
-** JavaScript **
-- 单行注释以 // 开头。
-- 多行注释以 /* 开始，以 */ 结尾。
-```JavaScript
-// 输出标题：
-document.getElementById("myH1").innerHTML="欢迎来到我的主页";
-/*
-下面的这些代码会输出
-一个标题和一个段落
-并将代表主页的开始
-*/
-document.getElementById("myH1").innerHTML="欢迎来到我的主页";
-document.getElementById("myP").innerHTML="这是我的第一个段落。";
-```
 ** Python **
 - 单行注释以 # 开头
 - 多行字符串（由三个单引号 ''' 或三个双引号 """ 包围的文本块）可以用作多行注释。
@@ -122,11 +93,6 @@ add(a, b)
 Python 中的变量不需要声明。每个变量在使用前都必须赋值，变量赋值以后该变量才会被创建。  
 等号 = 用来给变量赋值。等号左边是变量名，右边是存储在变量中的值。
 
-```javascript
-var name = "old"; // 函数作用域
-let age = 18; // 块集作用域，可变
-const PI = 3.14; // 块级作用域，不可变
-```
 ```python
 # python 没有 var/let/const 的区别
 name = "old" # 就是变量，可变
@@ -148,7 +114,7 @@ a, b, c = 1, 2, "runoob"
 ---
 
 ## 数据类型
->  核心差异：JS 只有 8 种类型（7 原始 + Object），Python 有丰富的内置类型体系。JS 的 number 一把梭，Python 拆成 int + float + complex；JS 的 Object 包打天下，Python 拆成 dict + tuple + set + 自定义类。
+>  Python 有丰富的内置类型体系。Python 的number 拆成 int + float + complex；JS 的 Object 包打天下，Python  拆成 dict + tuple + set + 自定义类。
 
 |分类|JS|Python|关键差异|
 |:-------|:-------|:-------|:-------|
@@ -182,6 +148,94 @@ type(None)         # <class 'NoneType'>
 isinstance(42, int)    # True（推荐）
 type(42) is int        # True（严格判断）
 ```
+## 数据类型转换
+Python 中数据类型转换分为隐式转换（自动）和显式转换（手动，也叫类型转换/强制转换）。
+### 隐式数据类型转换
+Python 在运算时会自动把"小"类型转成"大"类型，避免精度丢失。
+```python
+num1 = 1 # int
+num2 = 2.5 # float
+num3 = num1 + num2
+print(type(num3)) # <class 'float'>
+
+# 布尔值可以进行隐式转换
+num4 = True
+num5 = 10
+num6 = num4 + num5
+print(type(num6)) # <class 'int'>
+
+```
+>注意：隐式转换只发生在数值类型之间，"1" + 1 会直接报错。
+
+### 显示转换
+显示转换也叫强制转换，当python无法进行自动转换时，需要手动调用内置函数进行转换。
+
+|函数|	作用|	示例|	结果
+|--------|--------|--------|--------|
+|int(x)|	转整数|	int("10")|	10
+|float(x)|	转浮点数|	float("3.14")|	3.14
+|str(x)|	转字符串|	str(123)|	"123"
+|bool(x)|	转布尔|	bool(0)|	False
+|list(x)	|转列表|	list("abc")|	['a','b','c']
+|tuple(x)|	转元组|	tuple([1,2])|	(1, 2)
+|set(x)|	转集合|	set([1,1,2])|	{1, 2}
+|dict(x)|	转字典|	dict([("a",1)])|	{'a': 1}
+|complex(x)|	转复数|	complex(2)|	(2+0j)
+
+**字符串 ↔ 数字**
+```python
+int("100")        # 100
+int("100", 2)     # 4   按二进制解析
+float("3.14")     # 3.14
+str(3.14)         # "3.14"
+
+int("3.14")       # ❌ 报错！不能直接转带小数点的字符串
+int(float("3.14"))  # 3  先转 float 再转 int
+```
+**数字 ↔ 布尔**
+```python
+bool(0)      # False
+bool(1)      # True
+bool(-1)     # True
+bool(0.0)    # False
+
+int(True)    # 1
+int(False)   # 0
+```
+**字符串 ↔ 列表**
+```python
+list("abc")             # ['a', 'b', 'c']
+"".join(['a','b','c'])  # 'abc'
+"a,b,c".split(",")      # ['a', 'b', 'c']
+```
+**列表 ↔ 元组 ↔ 集合**
+```python
+list((1, 2, 3))       # [1, 2, 3]
+tuple([1, 2, 3])      # (1, 2, 3)
+set([1, 1, 2, 3])     # {1, 2, 3}   自动去重
+list({1, 2, 3})       # [1, 2, 3]   （顺序不保证）
+```
+**转字典**
+```python
+dict([("a", 1), ("b", 2)])    # {'a': 1, 'b': 2}
+dict(a=1, b=2)                # {'a': 1, 'b': 2}
+dict(zip(["a","b"], [1,2]))   # {'a': 1, 'b': 2}
+```
+**进阶：eval、json、ast**
+```python
+# eval：把字符串当 Python 表达式求值（⚠️ 有安全风险，慎用）
+eval("1 + 2")          # 3
+eval("[1, 2, 3]")      # [1, 2, 3]
+
+# JSON 转换（处理 API/文件数据常用）
+import json
+json.loads('{"a": 1}')     # {'a': 1}  字符串 → 字典
+json.dumps({"a": 1})       # '{"a": 1}'  字典 → 字符串
+
+# ast.literal_eval：更安全的 eval，只解析字面量
+import ast
+ast.literal_eval("[1, 2, 3]")   # [1, 2, 3]
+```
 
 ## 运算符差异
 |操作|JS|Python|说明|
@@ -191,8 +245,8 @@ type(42) is int        # True（严格判断）
 |严格等于|===|==|Python 默认就是严格比较！
 |松散等于|==|❌ 没有|Python 不存在类型强制转换比较
 |逻辑与|&&|and|——
-|逻辑或|`\|`\||\|——
-|逻辑非|!x|not x
+|逻辑或|`||`|or|——
+|逻辑非|!|not|——
 |自增|i++|❌ 没有|用 i += 1
 |三元表达式|x ? a : b|a if x else b|顺序反过来
 
@@ -236,7 +290,13 @@ greeting = f"你好，{name}！" # f 前缀 + {} 变量
 |小写|str.toLowerCase()|str.lower()
 |全部替换|str.replaceAll("a","b")|str.replace("a", "b")（默认全替换）
 
->易错点：join 的调用者不同！JS 是 arr.join(",")，Python 是 ",".join(list)。
+>易错点：
+>- join 的调用者不同！JS 是 arr.join(",")，Python 是 ",".join(list)。
+>- python中只能"字符串 + 字符串" 
+>- "abc" + "def"     # ✅ 'abcdef'
+>- "abc" + 123       # ❌ TypeError
+>- "age: " + str(18)          # 'age: 18'
+
 
 ## 数据结构对照
 ### 数组 → 列表（list）
@@ -350,7 +410,7 @@ del obj["age"]
 
 ### 元组（tuple）—— JS 没有的新类型
 ```python
-# 不可变的列表，用圆括号
+# 不可变的列表，用圆括号，不能修改
 point = (3, 4)
 x, y = point  # 解构（和 JS 数组解构一样）
 
@@ -368,9 +428,13 @@ s.has(2);        // true
 s.size;          // 3
 ```
 ```python
+# 集合（set）是一个无序的不重复元素序列。
 s = {1, 2, 3}        # 直接字面量！比 JS 方便
 s.add(4)2 in s       # 用 in 代替 has
+# 移除元素
+s.remove(3)          # 删除（不存在会报错）
 s.discard(2)         # 删除（不存在不报错）
+s.pop()             # 删除（不推荐使用因为集合是无序的排列的）
 len(s)               # 用 len() 代替 .size
 
 # 集合运算（Python 独有，非常强大）
@@ -409,7 +473,31 @@ match command:
         print("停止")
     case _:
         print("未知命令")
+# 综合练习
+num = int(input("输入一个数字"))
+if num == 0:
+    print(num)
+elif num<0:
+    print("这是一个负数")
+else:
+    match num:
+        case x if 1<=x<=10:
+            print("小正数")
+        case x if 11<=x<=100:
+            print("中正数")
+        case x if x>100:
+            print("大正数")
+
+# case x if 条件: 中的 x 是捕获变量，会匹配任意值，然后由 if 守卫判断是否满足范围。
+# case _: 是通配符，匹配剩余所有情况。
+
+# 三目运算
+# 语法：值1 if 条件 else 值2
+num1 = 5
+num2 = "大于5" if num1 > 5 else "小于等于5"
+print(num2) # 小于等于5
 ```
+
 ### 循环
 ```javascript
 for (let i = 0; i < 5; i++) { ... }       // 经典 for
@@ -417,6 +505,10 @@ for (const item of arr) { ... }           // for...of
 arr.forEach((item, index) => { ... });    // forEach
 ```
 ```python
+'''
+for 变量 in 可迭代对象:
+    循环体
+'''
 for i in range(5):              # = for(let i=0; i<5; i++)
     ...
 for item in arr:                # = for(const item of arr)
@@ -430,6 +522,102 @@ for key, value in obj.items():  # 同时取 key 和 value（推荐）
 range(5)          # 0, 1, 2, 3, 4
 range(2, 8)       # 2, 3, 4, 5, 6, 7
 range(0, 10, 2)   # 0, 2, 4, 6, 8
+
+# 遍历列表
+fruits = ["apple", "banana", "cherry"]
+for fruit in fruits:
+    print(fruit)
+# 遍历字符串
+for ch in "abc":
+    print(ch)  # a b c
+# 遍历字典
+d = {"a": 1, "b": 2}
+for key in d:
+    print(key)
+
+for key, value in d.items():
+    print(key, value)
+# 带索引遍历：enumerate()
+fruits = ["apple", "banana", "cherry"]
+for i, fruit in enumerate(fruits):
+    print(i, fruit)
+# 0 apple
+# 1 banana
+# 2 cherry
+
+# 指定起始索引
+for i, fruit in enumerate(fruits, start=1):
+    print(i, fruit)
+
+# 同时遍历多个序列：zip()
+names = ["Tom", "Jerry"]
+ages = [20, 22]
+for name, age in zip(names, ages):
+    print(name, age)
+```
+### while 循环
+```python
+count = 0
+while count < 5:
+    print(count)
+    count += 1
+# 无限循环
+while True:
+    cmd = input("输入命令（q退出）：")
+    if cmd == "q":
+        break
+    print("你输入了：", cmd)
+```
+### 循环控制语句
+```python
+# break：立即结束整个循环，break 会立即终止整个循环，不再执行后续迭代。嵌套循环中，break 只跳出它所在的那一层。
+for i in range(10):
+    if i == 3:
+        break
+    print(i)  # 0 1 2
+
+# continue：跳过本次循环，进入下一次， 只结束当前这一轮循环，直接进入下一次迭代，循环本身继续。
+for i in range(5):
+    if i == 2:
+        continue
+    print(i)  # 0 1 3 4
+
+# else 子句（Python 特有）
+for i in range(5):
+    if i == 10:
+        break
+else:
+    print("循环正常结束")  # 会执行
+
+for i in range(5):
+    if i == 3:
+        break
+else:
+    print("不会执行")  # 被 break 中断，不执行
+
+# 这个特性常用于查找场景：
+nums = [1, 3, 5, 7]
+target = 4
+for n in nums:
+    if n == target:
+        print("找到了")
+        break
+else:
+    print("没找到")  # 输出：没找到
+
+# return：在函数中跳出循环并结束函数。
+def process(nums):
+    for n in nums:
+        if n < 0:
+            return "发现负数，终止"
+    return "全部正常"
+
+# sys.exit()：直接退出整个程序。
+import sys
+
+for i in range(10):
+    if i == 5:
+        sys.exit("程序退出")   # 整个程序结束
 ```
 ## 函数
 ### 基本函数
@@ -652,6 +840,7 @@ raise ValueError("出错了")            # raise 代替 throw
 |抛出|throw new Error("msg")|raise ValueError("msg")
 |捕获|catch(error)|except ErrorType as e
 |多类型|instanceof 判断|except (TypeError, ValueError) as e
+
 ## 常用内置函数（JS 要装库，Python 自带）
 |需求|JS|Python（内置）
 |:--------|:--------|:--------|
@@ -723,6 +912,59 @@ with open("data.txt") as f:
     for line in f:      # 直接迭代文件对象！
         print(line.strip()) 
 ```
+## 输入
+获取用户在控制台输入的内容，数据类型：字符串
+
+输入：``input()``
+```python
+name = input("请输入名字：")
+print(f"你好，{name}")
+
+# 关键点：input() 的返回值永远是字符串（str），即使用户输入的是数字。
+age = input("请输入年龄：")   # 输入 18
+print(type(age))             # <class 'str'>
+print(age + 1)               # ❌ 报错，str 不能加 int
+
+# 必须手动转换类型
+ge = int(input("请输入年龄："))      # 转整数
+print(age + 1)                       # 19
+
+price = float(input("请输入价格："))  # 转浮点数
+
+# 一次输入多个值
+# 用 split() 按空格分割，再用 map 转换
+a, b = input("输入两个数（空格分隔）：").split()
+a, b = int(a), int(b)
+
+# 更简洁的写法
+a, b = map(int, input("输入两个数：").split())
+print(a + b)
+
+# 输入一串数字存入列表
+nums = list(map(int, input("输入一串数字：").split()))
+print(nums)   # 输入: 1 2 3 4  →  [1, 2, 3, 4]
+```
+
+## 输出
+```python
+print("Hello")                  # Hello
+print("a", "b", sep="-")        # a-b
+print("Hello", end=" ")         # 不换行 end默认为换行展示
+print("World")                  # Hello World
+
+''' 格式化输出（三种方式） '''
+name, age = "Tom", 18
+
+# 1. f-string（推荐，3.6+）
+print(f"我叫{name}，今年{age}岁")
+
+# 2. str.format()
+print("我叫{}，今年{}岁".format(name, age))
+
+# 3. % 格式化（旧式）
+print("我叫%s，今年%d岁" % (name, age))
+```
+
 ## 避坑指南 —— JS 开发者最常踩的 10 个坑
 1. 缩进是语法：混用 Tab 和空格报 IndentationError，统一用 4 空格
 2. **没有 ++/--**：i++ 是语法错误，用 i += 1
