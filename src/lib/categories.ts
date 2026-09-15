@@ -56,6 +56,7 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
       css: 'CSS3',
       javascript: 'JavaScript',
       react: 'React',
+      vue:'Vue',
       typescript: 'TypeScript',
       //miniapp: '微信小程序',
     },

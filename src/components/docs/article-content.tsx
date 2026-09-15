@@ -13,11 +13,11 @@
  *   a → 带 hover 效果的链接
  *
  * 代码样式说明：
- *   pre / code 不在 mdxComponents 中覆写，而是通过外层 .article-content
- *   容器的 CSS 级联规则统一控制（见 globals.css），避免 JS 端 parentName
- *   检测不可靠的问题：
+ *   pre → 通过 PreBlock 组件覆写（见 pre-block.tsx / copy-button.tsx），
+ *         添加复制按钮 + 代码块容器样式
+ *   code → 不在 mdxComponents 中覆写，通过外层 .article-content
+ *         容器的 CSS 级联规则统一控制（见 globals.css）：
  *     - .article-content code        → 行内代码：浅背景 + 圆角 + 等宽
- *     - .article-content pre         → 代码块容器：圆角 + 背景 + 横向滚动
  *     - .article-content pre code    → 代码块内代码：bg-transparent（无背景）
  *
  * 注意：本组件为客户端组件，因为 next-mdx-remote 的 MDXRemote
@@ -34,6 +34,7 @@ import remarkGfm from 'remark-gfm';
 import { useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SseDemoPage from '@/app/demo/sse/page';
+import { PreBlock } from '@/components/docs/pre-block';
 
 interface ArticleContentProps {
   content: string; // 已去除 frontmatter 的 MDX 正文
@@ -67,14 +68,8 @@ const mdxComponents = {
   p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
     <p {...props} className="text-foreground leading-7 mb-4" />
   ),
-  // 代码块容器：自动换行
-  pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
-    <pre
-      {...props}
-      className="bg-muted text-foreground rounded-lg p-4 my-4 text-sm border border-border overflow-x-hidden"
-      style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', overflowWrap: 'break-word' }}
-    />
-  ),
+  // 代码块容器：自动换行 + 复制按钮
+  pre: PreBlock,
   // 超链接：新窗口打开 + hover 效果
   a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a

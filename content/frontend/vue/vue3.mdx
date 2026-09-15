@@ -1,0 +1,1020 @@
+---
+title: Vue3
+description: vue3
+date: 2026-08-07
+tags: [Vue]
+category: frontend/vue
+order: 1
+---
+
+# vue2 VS vue3
+
+## 响应式原理
+
+### vue2
+>vue2是通过Object.defineProperty 劫持对象属性
+
+- 缺点：
+    - 无法检测对象属性的添加或删除（需要用 Vue.set）。
+    - 无法监听数组下标变化（需要用特殊方法如 splice）。
+    - 初始化时需要递归遍历所有属性，性能开销大。
+```html
+<template>
+    <div>
+        <p>Name: {{ user.name }}</p>
+        <p>Age: {{ user.age }}</p> <!-- 这里不会显示 25，除非强制刷新 -->
+    </div>
+</template>
+<script>
+// Vue 2 Component
+export default {
+  data() {
+    return {
+      user: {
+        name: 'Alice'
+      }
+    }
+  },
+  mounted() {
+    // 1. 动态添加属性
+    this.user.age = 25; 
+    
+    // 2. 尝试修改视图
+    console.log(this.user.age); // 输出: 25 (数据确实变了)
+    
+    // 问题：视图不会更新！因为 Vue 2 无法检测到新属性的添加
+
+    // 解决方案
+    // this.$set(this.user, 'age', 25); // 手动告诉 Vue：“我加了一个新属性，请帮我建立响应式连接”
+  }
+}
+</script>
+
+```
+>**原理分析：**
+>- 初始化时：Vue 2 遍历 data 中的 user 对象，使用 Object.defineProperty 为 name 属性设置了 getter 和 setter。
+>- 动态添加时：当你执行 this.user.age = 25 时，你只是给普通的 JavaScript 对象添加了一个新属性。
+>- 缺陷：Object.defineProperty 只能劫持已经存在的属性。它不知道 age 的存在，因此没有为 age 创建 getter/setter，Vue 也就无法追踪这个变化，导致视图不更新。
+
+### vue3
+>vue3是通过Proxy 代理整个对象
+
+- 优点：
+    - 懒代理：只有访问嵌套对象时才会进行代理，初始化速度更快。
+    - 全面监听：可以监听动态添加/删除的属性，以及数组索引变化。
+    - 性能提升：内存占用更少，更新速度更快。
+
+```html
+<template>
+    <p>Name: {{ user.name }}</p>
+    <p>Age: {{ user.age }}</p> <!-- 这里会立即显示 25 -->
+</template>
+<script setup>
+import { reactive, onMounted } from 'vue'
+
+const user = reactive({
+  name: 'Alice'
+})
+
+onMounted(() => {
+  // 1. 动态添加属性
+  user.age = 25; 
+  
+  // ✅ 成功：视图会自动更新！
+  console.log(user.age); // 输出: 25
+})
+</script>
+```
+>**原理分析：**
+>- 初始化时：Vue 3 使用 Proxy 代理了整个 user 对象。Proxy 就像是一个“保镖”或“拦截器”，包裹在对象外面。
+>- 动态添加时：当你执行 user.age = 25 时，这个操作被 Proxy 的 set 陷阱（trap）拦截了。
+>- 优势：Proxy 不需要预先知道对象里有哪些属性。它可以拦截任何对对象的读写操作，包括：
+>    - 读取不存在的属性
+>    - 添加新属性
+>    - 删除属性
+>    - 数组索引修改
+
+>因此，Vue 3 能立即察觉到 age 被添加了，并自动将其转换为响应式数据，触发视图更新。
+
+## 模板语法
+>Vue 3 的模板语法在95%的情况下与 Vue 2 完全兼容。
+
+### 文本插值
+> 使用“Mustache”语法（双大括号）将数据渲染为文本。
+```html
+<template>
+  <!-- 基本文本 -->
+  <p>{{ message }}</p>
+  
+  <!-- JavaScript 表达式 -->
+  <p>{{ number + 1 }}</p>
+  <p>{{ ok ? 'YES' : 'NO' }}</p>
+  <p>{{ message.split('').reverse().join('') }}</p>
+</template>
+```
+- **限制：**
+    - 每个绑定只能包含单个表达式。
+    - 不能使用语句（如 if, for, var）。
+    - 不能访问全局对象（如 window），只能访问组件实例暴露的属性。
+
+### 原始 HTML（v-html）
+> 双大括号会将数据解释为普通文本，而非 HTML。若要输出真正的 HTML，需使用 v-html。
+```html
+<template>
+  <!-- ⚠️ 警告：动态渲染任意 HTML 容易导致 XSS 攻击！ -->
+  <!-- 仅对可信内容使用 v-html，绝不要对用户提交的内容使用 -->
+  <div v-html="rawHtml"></div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+const rawHtml = ref('<span style="color: red">这是红色文字</span>')
+</script>
+```
+
+### 属性绑定（v-bind）
+> 使用 v-bind 指令（简写为 :）动态绑定 HTML 属性。
+
+```html
+<template>
+  <!-- 完整写法 -->
+  <div v-bind:id="dynamicId"></div>
+  
+  <!-- 简写写法 (推荐) -->
+  <div :id="dynamicId"></div>
+  
+  <!-- 布尔属性 (如果 isDisabled 为 truthy，则添加 disabled 属性) -->
+  <button :disabled="isDisabled">点击我</button>
+  
+  <!-- 动态绑定多个属性 (Vue 3.4+ 支持) -->
+  <div v-bind="objectOfAttrs"></div>
+</template>
+```
+**特殊属性**
+
+Vue 为 class 和 style 提供了增强支持，值可以是字符串、对象或数组。
+
+```html
+<template>
+  <!-- Class 绑定：对象语法 -->
+  <div :class="{ active: isActive, 'text-danger': hasError }"></div>
+  
+  <!-- Class 绑定：数组语法 -->
+  <div :class="[activeClass, errorClass]"></div>
+  
+  <!-- Style 绑定：对象语法 (CSS 属性名可用驼峰或短横线) -->
+  <div :style="{ color: activeColor, fontSize: fontSize + 'px' }"></div>
+</template>
+```
+### 事件处理（ v-on ）
+>使用 v-on 指令（简写为 @）监听 DOM 事件。
+```html
+<template>
+  <!-- 完整写法 -->
+  <button v-on:click="handleClick">点击</button>
+  
+  <!-- 简写写法 (推荐) -->
+  <button @click="handleClick">点击</button>
+  
+  <!-- 内联语句 -->
+  <button @click="count++">增加</button>
+  
+  <!-- 传递参数 -->
+  <button @click="greet('Hello')">打招呼</button>
+</template>
+
+<script setup>
+const handleClick = () => {
+  console.log('clicked')
+}
+const greet = (msg) => {
+  alert(msg)
+}
+</script>
+```
+**事件修饰符**
+>Vue 提供了方便的事件修饰符，通过点号调用。
+
+|修饰符|	作用|
+|:--------|:--------|
+|.stop|	调用 event.stopPropagation()
+|.prevent|	调用 event.preventDefault()
+|.self|	只有当事件是从侦听器绑定的元素本身触发时才触发回调
+|.once|	事件只触发一次
+|.capture|	添加事件侦听器时使用 capture 模式
+
+```html
+<!-- 阻止默认行为且停止冒泡 -->
+<form @submit.prevent.stop="onSubmit">...</form>
+
+<!-- 按键修饰符：只有按下 Enter 键时触发 -->
+<input @keyup.enter="submit" />
+```
+
+###  条件渲染
+> v-if / v-else-if / v-else
+
+```html
+<template>
+  <div v-if="type === 'A'">A</div>
+  <div v-else-if="type === 'B'">B</div>
+  <div v-else>Not A/B</div>
+</template>
+```
+**特点：**“真正”的条件渲染，因为条件块内的事件监听器和子组件在切换过程中会被销毁和重建。
+
+**性能提示：** 如果在运行时条件很少改变，使用 v-if 较好。
+
+**v-show**
+>无论初始条件如何，元素始终会被渲染并保留在 DOM 中，只是简单地切换 CSS 的 display 属性。
+```html
+<h1 v-show="ok">Hello!</h1>
+```
+**特点：** 初始渲染开销较大，但切换开销很小。
+
+**性能提示：** 如果需要非常频繁地切换，使用 v-show 较好。
+>注意：v-if 是“惰性”的，如果在初始渲染时条件为假，则什么也不做——直到条件第一次变为真时，才会开始渲染条件块。
+
+### 列表渲染
+> 使用 v-for 指令基于一个数组来渲染一个列表。
+```html
+<template>
+  <!-- 基本用法 -->
+  <ul>
+    <li v-for="item in items" :key="item.id">
+      {{ item.name }}
+    </li>
+  </ul>
+  
+  <!-- 获取索引 -->
+  <ul>
+    <li v-for="(item, index) in items" :key="index">
+      {{ index }} - {{ item.name }}
+    </li>
+  </ul>
+  
+  <!-- 遍历对象 -->
+  <ul>
+    <li v-for="(value, key, index) in myObject" :key="key">
+      {{ key }}: {{ value }}
+    </li>
+  </ul>
+</template>
+```
+**关键：key 属性**
+- 必须提供 :key：帮助 Vue 识别每个节点，从而高效地更新 DOM。
+- Key 的值：最好是唯一的 ID（如 item.id）。避免使用 index 作为 key，除非列表是静态的且不涉及排序/过滤，否则可能导致性能问题或状态错误。
+
+### v-if 和 v-for 的优先级冲突 
+>Vue 2: 当 v-if 和 v-for 用在同一个元素上时，v-for 的优先级更高。这意味着即使条件为假，循环也会先执行，造成性能浪费。
+```html
+<!-- Vue 2: 即使 show 为 false，items 也会被遍历 -->
+<li v-for="item in items" v-if="show">...</li>
+```
+>Vue 3: 不再支持在同一元素上同时使用 v-if 和 v-for。编译器会直接报错。
+```html
+<!-- Vue 3 ❌ 错误 -->
+<li v-for="item in items" v-if="show">...</li>
+
+<!-- Vue 3 ✅ 正确做法 1：外层包裹 template -->
+<template v-if="show">
+  <li v-for="item in items" :key="item.id">...</li>
+</template>
+
+<!-- Vue 3 ✅ 正确做法 2：计算属性过滤 -->
+<li v-for="item in activeItems" :key="item.id">...</li>
+```
+
+## options API (选项式API) VS componsition API（组合式API）
+
+|特性|	Options API (Vue 2 风格)|	Composition API (Vue 3 风格)
+|:---------|:---------|:---------|
+|定义方式|	使用对象属性 (data, methods, computed 等) 描述组件逻辑。	|使用导入的函数 (ref, reactive, computed 等) 在 setup 中编写逻辑。
+|上下文 (this)	|强依赖 this。所有选项通过 this 相互访问。|	无 this。基于函数作用域和闭包，变量直接访问。
+|代码组织|	按类型分类：状态归状态，方法归方法。|	按功能分类：相关逻辑放在一起。
+|响应式声明|	自动转换：data 中的属性自动变为响应式。|	显式声明：需手动使用 ref() 或 reactive()。
+|逻辑复用|	Mixins (混合)，易产生命名冲突和来源不清。|	Composables (组合式函数)，清晰、安全、TS 友好。
+|TypeScript	|支持较差，需要复杂类型推断。|	原生支持极佳，类型推导自然。
+
+### 状态定义 (State)
+|Options API|Composition API|注意事项
+|:---------|:---------|:---------|
+|`data() { return { count: 0 } }`|`const count = ref(0)`|	JS 中访问需 .value，模板中自动解包。
+|`data() { return { user: { name: '' } } }`	|`const user = reactive({ name: '' })`	|reactive 对象无需 .value，但不能直接替换整个对象。
+
+#### ref
+> ref 接收一个内部值并返回一个响应式的 ref 对象
+```typescript
+import { ref } from 'vue'
+
+// 1. 基本类型 (必须用 ref)
+const count = ref(0)
+count.value++ // JS中必须加 .value
+
+// 2. 引用类型 (也可以用 ref)
+const user = ref({ name: 'Alice' })
+user.value.name = 'Bob' // JS中必须加 .value
+```
+- ***优点：***
+    - 统一性：无论什么类型都用 ref，心智负担小。
+    - 灵活性：可以随时替换整个变量（例如从 API 获取新数据后直接赋值）。
+    - 逻辑组合函数友好：在 Composables 中返回 ref 更容易保持响应性。
+
+>**注意**: JS中必须加 .value，模板中自动解包，无需 .value
+
+#### reactive
+>reactive: 对象专用返回一个对象的响应式代理（Proxy）。
+```typescript
+import { reactive } from 'vue'
+
+// 只能用于对象/数组
+const state = reactive({
+  count: 0,
+  user: { name: 'Alice' }
+})
+
+state.count++ // JS中直接访问，无需 .value
+state.user.name = 'Bob' // 深层嵌套也是响应式的
+```
+- **优点：**
+  - 代码简洁：在处理复杂嵌套对象时，不需要到处写 .value。
+  - 结构清晰：适合将一组相关状态包裹在一个对象中。
+- **缺点**
+  - 不能替换根对象：
+  ```typescript
+    let state = reactive({ count: 0 })
+    // ❌ 错误！state 变成了一个普通对象，不再响应
+    state = { count: 1 } 
+  ````
+  - 解构丢失响应性:
+  ```typscript
+  const { count } = state // ❌ count 只是一个普通数字
+  ```
+
+#### 常见陷阱与解决方案
+
+- **解构导致失去响应性**
+    - 无论是 ref 还是 reactive，直接解构都会断开与响应式系统的连接。
+    ```typescript
+    // ❌ 错误写法：
+    const state = reactive({ count: 0, name: 'Alice' })
+    let { count, name } = state // 失去响应性
+
+    ✅ 正确写法 (使用 toRefs)：
+    import { toRefs } from 'vue'
+
+    const state = reactive({ count: 0, name: 'Alice' })
+    // toRefs 将每个属性转换为 ref
+    const { count, name } = toRefs(state) 
+
+    // 现在 count 是一个 ref，访问时需要 .value
+    console.log(count.value) 
+    ```
+- **ref 的对象嵌套**
+    - 如果你把一个对象传给 ref，Vue 内部会自动将其转换为 reactive。
+    ```typescript
+    const objRef = ref({ count: 0 })
+    // 实际上 objRef.value 是一个 reactive 对象
+    objRef.value.count++ // 有效
+    ```
+#### 最佳实践建议
+> 黄金法则：优先使用 ref
+- **理由：**
+    - 一致性：你不需要判断“这个是数字用 ref，那个是对象用 reactive”。全部用 ref，代码风格统一。
+    - 避免重构痛苦：如果你一开始用 reactive，后来发现需要替换整个对象，或者需要把某个属性提取出来单独传递，你会遇到很多响应性丢失的问题。ref 没有这个问题。
+    - TypeScript 支持更好：ref 的类型推断通常比 reactive 更直观。
+- **何时使用 reactive？**
+    - 你有一个巨大的、深层嵌套的对象，且你确定永远不会替换整个对象，只会修改内部属性。
+    - 你非常讨厌在代码中写 .value，并且愿意承担解构时需要 toRefs 的额外成本。
+    - 在编写某些特定的库或底层逻辑时，需要明确的对象代理行为。
+
+### 方法定义 (methods)
+>在 Vue 2 中，所有方法必须定义在组件配置对象的 methods属性中。
+```javascript
+// Vue 2
+export default {
+  data() {
+    return {
+      count: 0
+    }
+  },
+  methods: {
+    // 1. 普通函数定义
+    increment() {
+      this.count++
+    },
+    
+    // 2. 访问其他方法或数据必须通过 this
+    doubleAndIncrement() {
+      this.increment() // 调用内部方法
+      console.log(this.count) // 访问数据
+    }
+  }
+}
+```
+>在 Vue 3 (Composition API) 中，没有专门的 methods 选项。方法就是普通的 JavaScript 函数（通常是箭头函数或函数声明）。
+```html
+<script setup>
+import { ref } from 'vue'
+
+const count = ref(0)
+
+// 1. 直接定义函数
+const increment = () => {
+  count.value++
+}
+
+// 2. 访问其他函数或数据直接通过变量名（闭包作用域）
+const doubleAndIncrement = () => {
+  increment() // 直接调用
+  console.log(count.value) // 直接访问 .value
+}
+</script>
+```
+
+|特性|	Vue 2 (methods)| Vue 3 (`<script setup>`)
+|:--------|:--------|:--------|
+|定义位置|	`methods: { ... }`对象内	|`<script>` 顶层作用域
+|上下文 (this)	|强依赖 this。必须用 this.method() 调用。|无 this。直接通过函数名调用。
+|自动绑定	|Vue 自动将 this 绑定到组件实例。	|不需要绑定，基于 JS 原生作用域。
+|箭头函数陷阱|	❌ 禁止在 methods 中使用箭头函数，因为 this 会指向错误。	|✅ 推荐使用箭头函数，简洁且无 this 问题。
+|类型推导 (TS)	|较复杂，需要借助 vue-tsc 或装饰器。|天然友好，TS 直接推断函数签名。
+
+###  计算属性 (computed)
+> Vue 2 和 Vue 3 的 **计算属性（Computed）** 在核心概念上是一致的：基于响应式依赖进行缓存，只有当依赖发生变化时才会重新计算。
+
+但是，它们的定义语法、访问方式以及对 TypeScript 的支持有显著区别。
+
+#### 核心语法对比
+```javascript
+// vue2 在 computed选项中定义，通过 this 访问其他数据。
+export default {
+  data() {
+    return {
+      firstName: 'John',
+      lastName: 'Doe'
+    }
+  },
+  computed: {
+    // 1. 只读计算属性（最常用）
+    fullName() {
+      return this.firstName + ' ' + this.lastName
+    },
+    
+    // 2. 可写计算属性（Getter/Setter）
+    fullInfo: {
+      get() {
+        return this.firstName + ' ' + this.lastName
+      },
+      set(newValue) {
+        const names = newValue.split(' ')
+        this.firstName = names[0]
+        this.lastName = names[names.length - 1]
+      }
+    }
+  }
+}
+```
+vue3使用 computed() 函数导入，返回一个 Ref 对象。
+```html
+<script setup>
+import { ref, computed } from 'vue'
+
+const firstName = ref('John')
+const lastName = ref('Doe')
+
+// 1. 只读计算属性
+// 注意：computed 返回的是一个 ref，所以访问需要 .value
+const fullName = computed(() => {
+  return firstName.value + ' ' + lastName.value
+})
+
+// 2. 可写计算属性 (Getter/Setter)
+const fullInfo = computed({
+  get() {
+    return firstName.value + ' ' + lastName.value
+  },
+  set(newValue) {
+    const names = newValue.split(' ')
+    firstName.value = names[0]
+    lastName.value = names[names.length - 1]
+  }
+})
+</script>
+
+<template>
+  <!-- 模板中自动解包，无需 .value -->
+  <p>{{ fullName }}</p>
+  <p>{{ fullInfo }}</p>
+</template>
+```
+在 Vue 3 中，computed() 返回的是一个 ComputedRef。这意味着：
+
+- 在 `<script>` 中：你必须使用 .value 来读取计算结果。
+- 在 `<template>` 中：Vue 会自动解包 Ref，所以你依然直接写 {{ double }}。
+- 不可直接赋值：如果你尝试 double.value = 10，Vue 会报错（除非你定义了 setter）。这保证了计算属性的只读一致性，防止意外修改。
+
+
+### 侦听器 (watch)
+>Vue 2 和 Vue 3 的侦听器（Watchers）在核心功能上是一致的：监听响应式数据的变化并执行副作用，但是，Vue 3 引入了更强大的 watchEffect，并且 watch 的 API 设计更加灵活和显式。
+
+####  基础用法对比：watch
+在 Vue 2 中，你通过属性名（字符串）来监听 data 中的字段。
+```javascript
+export default {
+  data() {
+    return {
+      question: '',
+      answer: 'Questions usually contain a question mark.'
+    }
+  },
+  watch: {
+    // 1. 简单监听
+    question(newVal, oldVal) {
+      this.getAnswer()
+    },
+    
+    // 2. 带选项的监听
+    someObject: {
+      handler(newVal, oldVal) {
+        console.log('changed')
+      },
+      deep: true,    // 深度监听
+      immediate: true // 立即执行一次
+    }
+  },
+  methods: {
+    getAnswer() {
+      // ...
+    }
+  }
+}
+```
+在 Vue 3 中，watch 是一个导入的函数。你需要明确告诉它监听什么（Ref、Getter 或 Reactive 对象）。
+```html
+<script setup>
+import { ref, reactive, watch } from 'vue'
+
+const question = ref('')
+const state = reactive({ count: 0 })
+
+// 1. 监听 Ref
+watch(question, (newVal, oldVal) => {
+  console.log(`New: ${newVal}, Old: ${oldVal}`)
+})
+
+// 2. 监听 Getter 函数 (推荐用于监听复杂表达式)
+watch(
+  () => state.count, 
+  (newVal, oldVal) => {
+    console.log(`Count changed to ${newVal}`)
+  }
+)
+// 3. 监听多个源
+watch([question, () => state.count], ([newQ, newC], [oldQ, oldC]) => {
+  console.log('Question or Count changed')
+})
+
+// 4. 带选项
+watch(
+  () => state.someNestedObj,
+  (newVal) => { /* ... */ },
+  { deep: true, immediate: true }
+)
+</script>
+```
+>**关键点：**
+- 监听 ref 时，直接传入 ref 变量。
+- 监听 reactive 对象的某个属性时，必须使用 Getter 函数 () => obj.prop，否则无法正确追踪变化。
+- 监听整个 reactive 对象时，可以直接传入对象，但通常建议配合 deep: true 或使用 Getter。
+
+#### Vue 3 的新利器：watchEffect
+这是 Vue 3 独有的 API，它自动追踪回调函数中使用的响应式依赖。
+```javascript
+// 场景：只要 question 变了，就重新获取答案
+
+// Vue 2 写法：
+watch: {
+  question() {
+    this.getAnswer() // 必须手动指定监听 question
+  }
+}
+
+// Vue 3 watchEffect 写法：
+import { ref, watchEffect } from 'vue'
+
+const question = ref('')
+const answer = ref('')
+
+watchEffect(async () => {
+  // ✅ 自动追踪：只要 question.value 被读取，它就成为依赖
+  // 当 question 变化时，这个函数会自动重新运行
+  const res = await fetch(`/api/ask?q=${question.value}`)
+  answer.value = await res.json()
+})
+```
+
+#### watchEffect vs watch 的区别：
+|特性|	watch|	watchEffect
+|:---------|:---------|:---------|
+|懒执行|	✅ 默认懒执行（变化时才跑|）	❌ 立即执行一次（类似 mounted + watch）
+|依赖声明|	显式声明监听源|	隐式自动追踪（在回调中用到的 ref 都会被视为依赖）
+|访问旧值|	✅ 提供 (newVal, oldVal)|	❌ 不提供旧值
+|适用场景|	需要访问旧值、特定条件触发、性能敏感	|同步状态、侧边效应、API 请求、简化代码
+
+### 生命周期
+>Vue 2 和 Vue 3 的生命周期在核心阶段上是非常相似的（创建、挂载、更新、销毁），但在命名、调用方式以及组合式 API 中的用法上有显著区别。
+
+|阶段|Vue 2 (Options API)|Vue3 (Options API)|Vue3 (Composition API)|说明|
+|:--------|:--------|:--------|:--------|:--------|
+|创建前|	beforeCreate|	beforeCreate|	(无)|	setup() 在此阶段之前执行
+|创建后|	created|	created|	(无)	|setup() 替代了这两个钩子
+|挂载前|	beforeMount|	beforeMount|	onBeforeMount|	DOM 尚未生成
+|挂载后|	mounted|	mounted|	onMounted|	最常用，可访问 DOM
+|更新前|	beforeUpdate|	beforeUpdate|	onBeforeUpdate|	数据变但 DOM 未变
+|更新后|	updated|	updated|	onUpdated|	DOM 已更新
+|卸载前|	beforeDestroy|	beforeUnmount|	onBeforeUnmount|	⚠️ 名称变更
+|卸载后|	destroyed|	unmounted|	onUnmounted|	⚠️ 名称变更
+|错误捕获|	errorCaptured|	errorCaptured|	onErrorCaptured	
+
+#### 代码写法对比
+**Vue 2**
+```javascript
+export default {
+  data() {
+    return { message: 'Hello' }
+  },
+  beforeCreate() {
+    console.log('beforeCreate')
+    // this 不可用，data/methods 未初始化
+  },
+  created() {
+    console.log('created')
+    // this 可用，data/methods 已初始化，但 $el (DOM) 不可用
+    this.fetchData()
+  },
+  beforeMount() {
+    console.log('beforeMount')
+  },
+  mounted() {
+    console.log('mounted')
+    // ✅ 可以操作 DOM
+    console.log(this.$refs.myDiv) 
+  },
+  beforeUpdate() {
+    console.log('beforeUpdate')
+  },
+  updated() {
+    console.log('updated')
+  },
+  beforeDestroy() {
+    console.log('beforeDestroy')
+    // 清理定时器、事件监听器
+  },
+  destroyed() {
+    console.log('destroyed')
+  }
+}
+```
+**Vue 3(`<script setup>`)**
+
+在 Composition API 中，没有 beforeCreate 和 created。因为 `<script setup>` 中的代码本身就是在组件实例创建时同步执行的，相当于这两个钩子的结合体。其他钩子需要从 vue 中导入，并以 on 开头。
+```html
+<script setup>
+import { 
+  ref, 
+  onBeforeMount, 
+  onMounted, 
+  onBeforeUpdate, 
+  onUpdated, 
+  onBeforeUnmount, 
+  onUnmounted 
+} from 'vue'
+
+const message = ref('Hello')
+
+// ✅ 替代 beforeCreate 和 created
+console.log('setup executed (like created)')
+
+// 挂载前
+onBeforeMount(() => {
+  console.log('onBeforeMount')
+})
+
+// 挂载后
+onMounted(() => {
+  console.log('onMounted')
+  // ✅ 可以操作 DOM
+  // 注意：在 script setup 中获取 DOM 引用需要使用 ref
+})
+
+// 更新前
+onBeforeUpdate(() => {
+  console.log('onBeforeUpdate')
+})
+
+// 更新后
+onUpdated(() => {
+  console.log('onUpdated')
+})
+
+// 卸载前 (对应 Vue 2 的 beforeDestroy)
+onBeforeUnmount(() => {
+  console.log('onBeforeUnmount')
+  // 清理工作
+})
+
+// 卸载后 (对应 Vue 2 的 destroyed)
+onUnmounted(() => {
+  console.log('onUnmounted')
+})
+</script>
+```
+
+**注册多个同名钩子**
+- Vue 2: 每个生命周期选项只能定义一次。如果多次定义，后面的会覆盖前面的。
+- Vue 3: 你可以多次调用同一个生命周期钩子（如 onMounted），它们会按顺序依次执行。这对于 Composables（组合式函数）非常有用。
+```javascript
+// Vue 3
+onMounted(() => {
+  console.log('First')
+})
+
+onMounted(() => {
+  console.log('Second')
+})
+// 输出: First, Second
+```
+
+### 提供/注入 (Provide/Inject)
+Vue 2 和 Vue 3 的 Provide/Inject（提供/注入） 机制在核心概念上完全一致：用于跨层级组件通信（祖先组件向后代组件传递数据），避免通过 props 层层透传（Prop Drilling）。
+
+但是，Vue 3 在 Composition API 中提供了更灵活、类型安全且响应式处理更明确的 API。
+
+>假设场景：祖父组件 (Grandparent) 提供一个主题颜色，孙组件 (Grandchild) 使用它。
+
+在 Vue 2 中，provide 通常是一个对象或返回对象的函数。如果要保持响应性，通常需要提供 this 或者一个响应式对象。
+
+祖父组件 (Grandparent.vue):
+```javascript
+export default {
+  data() {
+    return {
+      theme: 'dark'
+    }
+  },
+  // 方式 1: 静态提供 (非响应式)
+  // provide: {
+  //   theme: 'dark'
+  // },
+  
+  // 方式 2: 函数形式 (可以访问 this，但需注意响应性陷阱)
+  provide() {
+    return {
+      // ⚠️ 注意：直接提供 this.theme 是非响应式的
+      // 如果希望子组件能响应变化，通常需要提供整个 vm 或一个 reactive 对象
+      theme: this.theme, 
+      changeTheme: (newTheme) => {
+        this.theme = newTheme
+      }
+    }
+  }
+}
+```
+孙组件 (Grandchild.vue):
+```javascript
+export default {
+  inject: ['theme', 'changeTheme'],
+  mounted() {
+    console.log(this.theme) // 'dark'
+    // ⚠️ 如果祖父组件修改了 this.theme，这里的 this.theme 不会自动更新！
+    // 除非你注入的是整个实例或使用了特殊的响应式包装
+  }
+}
+
+//Vue 2 痛点：默认情况下，provide 提供的值不是响应式的。如果祖先组件修改了数据，后代组件无法感知。开发者通常需要引入第三方库或手动处理响应性。
+```
+Vue 3 的 provide 和 inject 是函数，天然支持响应式。只要你提供的是一个 ref 或 reactive 对象，后代组件就能自动响应变化。
+
+祖父组件 (Grandparent.vue):
+```html
+<script setup>
+import { ref, provide } from 'vue'
+
+// 1. 定义响应式数据
+const theme = ref('dark')
+
+// 2. 提供数据
+// key 可以是字符串或 Symbol (推荐 Symbol 避免冲突)
+provide('theme-key', theme)
+
+// 也可以提供修改方法
+const updateTheme = (newTheme) => {
+  theme.value = newTheme
+}
+provide('update-theme', updateTheme)
+</script>
+
+<template>
+  <button @click="updateTheme('light')">切换为浅色</button>
+  <ChildComponent />
+</template>
+```
+孙组件 (Grandchild.vue):
+```html
+<script setup>
+import { inject } from 'vue'
+
+// 1. 注入数据
+// 第二个参数是默认值（可选）
+const theme = inject('theme-key', 'default-light')
+
+// 2. 注入方法
+const updateTheme = inject('update-theme')
+
+// ✅ 现在 theme 是一个 ref，可以直接在模板中使用，或在脚本中监听变化
+</script>
+
+<template>
+  <div :class="theme">
+    当前主题: {{ theme }}
+    <button @click="updateTheme('dark')">变暗</button>
+  </div>
+</template>
+```
+#### 关键差异
+1. 响应性
+    - Vue 2: provide 的值默认是静态快照。如果你提供一个基本类型（如 string），后代拿到的就是那个字符串的副本，祖先改了，后代不知道。
+    - Vue 3: provide 的值如果是 ref 或 reactive，后代通过 inject 拿到的是同一个引用。祖先修改 .value，后代自动更新。这是 Vue 3 Provide/Inject 最大的优势。
+2. 键名冲突
+    - Vue 2: 通常使用字符串 key，容易在不同库之间冲突。
+    - Vue 3: 推荐使用 Symbol 作为 key，确保唯一性
+    ```javascript
+    // themeSymbols.js
+    export const themeKey = Symbol('theme')
+
+    // Grandparent.vue
+    import { themeKey } from './themeSymbols'
+    provide(themeKey, theme)
+
+    // Grandchild.vue
+    import { themeKey } from './themeSymbols'
+    const theme = inject(themeKey)
+    ```
+3. 只读性保护
+    - Vue 3 允许你提供“只读”的数据，防止后代组件意外修改祖先的状态。
+    ```javascript
+    import { readonly, provide } from 'vue'
+
+    const state = reactive({ count: 0 })
+
+    // 提供只读代理
+    provide('state', readonly(state))
+
+    // 后代组件尝试修改 state.count 时，Vue 会在控制台发出警告
+    ```
+
+## 插槽
+Vue 2 和 Vue 3 的**插槽（Slots）**机制在核心概念上完全一致：允许父组件向子组件的内容区域注入 HTML 或其他组件。
+
+但是，Vue 3 废弃了旧的语法，统一并简化了 API，使其更加直观。
+
+### 核心变化概览表
+|特性|	Vue 2|	Vue 3|	状态
+|:--------|:--------|:--------|:--------|
+|默认插槽|	`<slot></slot>`|	`<slot></slot>`|	✅ 不变
+|具名插槽声明|	`<slot name="header"></slot>`|	`<slot name="header"></slot>`|	✅ 不变
+|具名插槽使用|	`<template slot="header">`|	`<template #header>`|	⚠️ 废弃 slot 属性
+|作用域插槽声明|	`<slot :user="user"></slot>`|	`<slot :user="user"></slot>`|	✅ 不变 (推荐用 v-bind)
+|作用域插槽使用|	`<template slot-scope="props">`|	`<template #default="props">`	|⚠️ 废弃 slot-scope
+|动态插槽名|	不支持 |	`<template #[dynamicName]>`	✅ 新增支持
+
+### 详细语法对比
+
+#### 默认插槽
+两者完全一致。
+
+子组件 (Child.vue):
+```html
+<template>
+  <div class="card">
+    <slot>默认内容</slot>
+  </div>
+</template>
+```
+父组件:
+```html
+<Child>
+  <p>这是插入的内容</p>
+</Child>
+```
+#### 具名插槽
+Vue 3 废除了 slot 属性，统一使用 v-slot 指令（简写为 #）。
+
+子组件 (Child.vue):
+```html
+<template>
+  <div class="layout">
+    <header>
+      <slot name="header"></slot>
+    </header>
+    <main>
+      <slot></slot>
+    </main>
+    <footer>
+      <slot name="footer"></slot>
+    </footer>
+  </div>
+</template>
+```
+父组件对比：
+```html
+<!-- Vue 2 (旧语法 - 已废弃)-->
+<Child>
+  <!-- ❌ Vue 3 中不再支持 slot 属性 -->
+  <template slot="header">
+    <h1>标题</h1>
+  </template>
+  
+  <p>主体内容</p>
+  
+  <template slot="footer">
+    <p>页脚</p>
+  </template>
+</Child>
+
+  <!--Vue 3 (新语法 - 推荐)-->
+<Child>
+  <!-- ✅ 使用 v-slot 或简写 # -->
+  <template #header>
+    <h1>标题</h1>
+  </template>
+  
+  <p>主体内容</p>
+  
+  <template #footer>
+    <p>页脚</p>
+  </template>
+</Child>
+<!--注意：v-slot 只能用在 <template> 标签上（除非是默认插槽且没有其它具名插槽时，可以直接用在组件标签上，但为了清晰起见，推荐始终使用 <template>）-->
+```
+#### 作用域插槽
+当子组件需要向父组件传递数据时使用。
+
+子组件 (Child.vue):
+```html
+<template>
+  <ul>
+    <li v-for="item in items" :key="item.id">
+      <!-- 将 item 暴露给父组件 -->
+      <slot :item="item"></slot>
+    </li>
+  </ul>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+const items = ref([
+  { id: 1, text: 'Item 1' },
+  { id: 2, text: 'Item 2' }
+])
+</script>
+```
+父组件对比：
+```html
+<!--Vue 2 (旧语法 - 已废弃)-->
+<Child>
+  <!-- ❌ slot-scope 已废弃 -->
+  <template slot-scope="props">
+    <span>{{ props.item.text }}</span>
+  </template>
+</Child>
+
+<!--Vue 3 (新语法 - 推荐)-->
+<Child>
+  <!-- ✅ 使用 #default 或 # + 解构 -->
+  <template #default="{ item }">
+    <span>{{ item.text }}</span>
+  </template>
+</Child>
+
+<!--更简洁的解构写法-->
+<Child v-slot="{ item }">
+  <span>{{ item.text }}</span>
+</Child>
+```
+#### 动态插槽名（Vue 3 新增）
+Vue 3 支持动态绑定插槽名称，这在构建通用 UI 库时非常有用。
+
+```html
+<Child>
+  <template #[slotName]>
+    Content for dynamic slot
+  </template>
+</Child>
+
+<script setup>
+const slotName = ref('header')
+</script>
+```
+
