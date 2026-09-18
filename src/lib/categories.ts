@@ -66,10 +66,10 @@ export const categoryConfig: Record<string, { name: string; icon: string; descri
     icon: 'server',
     description: 'Java · Spring Boot · MySQL（即将上线）',
     children: {
+      python:'Python',
+      mysql: 'MySQL',
       java: 'Java',
       springboot: 'Spring Boot',
-      mysql: 'MySQL',
-      python:'Python'
     },
   },
   ai: {
