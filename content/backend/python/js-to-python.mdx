@@ -31,8 +31,8 @@ else:
     print ("False")
 
 #注意缩进数的空格数不一致，会导致运行错误
-# 多行语句
-# Python 通常是一行写完一条语句，但如果语句很长，我们可以使用反斜杠 \ 来实现多行语句，例如：
+#多行语句
+#Python 通常是一行写完一条语句，但如果语句很长，我们可以使用反斜杠 \ 来实现多行语句，例如：
 item_one = 1
 item_two = 2
 item_three = 3
@@ -47,7 +47,7 @@ print(total) # 输出为 6
 - 单行注释以 # 开头
 - 多行字符串（由三个单引号 ''' 或三个双引号 """ 包围的文本块）可以用作多行注释。
 ```python
-# 这是一个注释
+#这是一个注释
 print("Hello, World!")
 '''
 这是多行注释，用三个单引号
@@ -61,7 +61,7 @@ print("Hello, World!")
 这也是多行注释，用三个双引号
 这也是多行注释，用三个双引号
 """
-# 多行注释是由三个单引号 ''' 或三个双引号 """ 来定义的，这种注释方式不能嵌套使用。
+#多行注释是由三个单引号 ''' 或三个双引号 """ 来定义的，这种注释方式不能嵌套使用。
 ```
 > **注意:** 虽然多行字符串在这里被当作多行注释使用，但它实际上是一个字符串，我们只要不使用它，它不会影响程序的运行。
 >这些字符串在代码中可以被放置在一些位置，而不引起实际的执行，从而达到注释的效果。
@@ -74,10 +74,10 @@ def add(a, b):
     """返回两数之和"""
     return a + b
 
-# 通过 __doc__ 属性访问
+#通过 __doc__ 属性访问
 print(add.__do c__)  # 输出: 返回两数之和
 
-# 使用 help() 函数
+#使用 help() 函数
 help(add)
 '''Help on function add in module __main__:
 
@@ -91,19 +91,19 @@ Python 中的变量不需要声明。每个变量在使用前都必须赋值，�
 等号 = 用来给变量赋值。等号左边是变量名，右边是存储在变量中的值。
 
 ```python
-# python 没有 var/let/const 的区别
+#python 没有 var/let/const 的区别
 name = "old" # 就是变量，可变
 age = 18 #没有声明关键字直接赋值
 PI = 3.14 # 约定：全大写表示"别改我"，但语言层面不强制实际可以修改成功。全靠命名约定（全大写 MAX_SIZE）和开发者自觉。
 
-## 赋值
+##赋值
 counter = 100          # 整型变量
 miles   = 1000.0       # 浮点型变量
 name    = "runoob"     # 字符串
 boolean = True         # 布尔型变量
-# 多个变量赋值
+#多个变量赋值
 a = b = c = 1
-# 为多个变量同时指定不同的值
+#为多个变量同时指定不同的值
 a, b, c = 1, 2, "runoob"
 ```
 > **易错点** Python没有const，全大写命名只是约定，没有块级作用域，if里赋的值外面也能用。
@@ -134,12 +134,12 @@ typeof undefined   // "undefined"
 typeof null        // "object"  ← JS 的历史 bug
 ```
 ```python
-# Python
+#Python
 type(42)           # <class 'int'>
 type("hello")      # <class 'str'>
 type(True)         # <class 'bool'>
 type(None)         # <class 'NoneType'>
-# 类型检查
+#类型检查
 isinstance(42, int)    # True（推荐）
 type(42) is int        # True（严格判断）
 ```
@@ -153,7 +153,7 @@ num2 = 2.5 # float
 num3 = num1 + num2
 print(type(num3)) # <class 'float'>
 
-# 布尔值可以进行隐式转换
+#布尔值可以进行隐式转换
 num4 = True
 num5 = 10
 num6 = num4 + num5
@@ -218,16 +218,16 @@ dict(zip(["a","b"], [1,2]))   # {'a': 1, 'b': 2}
 ```
 **进阶：eval、json、ast**
 ```python
-# eval：把字符串当 Python 表达式求值（⚠️ 有安全风险，慎用）
+#eval：把字符串当 Python 表达式求值（⚠️ 有安全风险，慎用）
 eval("1 + 2")          # 3
 eval("[1, 2, 3]")      # [1, 2, 3]
 
-# JSON 转换（处理 API/文件数据常用）
+#JSON 转换（处理 API/文件数据常用）
 import json
 json.loads('{"a": 1}')     # {'a': 1}  字符串 → 字典
 json.dumps({"a": 1})       # '{"a": 1}'  字典 → 字符串
 
-# ast.literal_eval：更安全的 eval，只解析字面量
+#ast.literal_eval：更安全的 eval，只解析字面量
 import ast
 ast.literal_eval("[1, 2, 3]")   # [1, 2, 3]
 ```
@@ -246,15 +246,15 @@ ast.literal_eval("[1, 2, 3]")   # [1, 2, 3]
 |三元表达式|x ? a : b|a if x else b|顺序反过来
 
 ```python
-# 三元表达式对照
-# JS:  const result = score >= 60 ? "pass" : "fail"
-# PY:  result = "pass" if score >= 60 else "fail"
+#三元表达式对照
+#JS:  const result = score >= 60 ? "pass" : "fail"
+#PY:  result = "pass" if score >= 60 else "fail"
 
-# 逻辑运算符返回值（行为一致！）
-# JS:  "" || "default"  →  "default"
-# PY:  "" or "default"  →  "default"
-# JS:  "hello" && 42    →  42
-# PY:  "hello" and 42   →  42
+#逻辑运算符返回值（行为一致！）
+#JS:  "" || "default"  →  "default"
+#PY:  "" or "default"  →  "default"
+#JS:  "hello" && 42    →  42
+#PY:  "hello" and 42   →  42
 ```
 ## 字符串操作
 ```javascript
@@ -263,11 +263,11 @@ const name = "大帅";
 const greeting = `你好，${name}！`; // 反引号 + ${}
 ```
 ```python
-# Python f-string（最推荐）
+#Python f-string（最推荐）
 name = "大帅"
 greeting = f"你好，{name}！" # f 前缀 + {} 变量
 
-# 其他格式化（了解即可）
+#其他格式化（了解即可）
 "你好，%s！" % name                          # 旧式
 "你好，{}！".format(name)                    # .format() 方法
 ```
@@ -313,39 +313,39 @@ arr = [1, 2, 3]
 arr.append(4)               # 末尾添加（= push）
 arr.pop()                   # 末尾删除
 
-# 映射/过滤 —— 列表推导式（最推荐）
+#映射/过滤 —— 列表推导式（最推荐）
 
 [x * 2 for x in arr]               # = map
 [x for x in arr if x > 1]          # = filter
 
-# 函数式写法（和 JS 几乎一样）
+#函数式写法（和 JS 几乎一样）
 
 list(map(lambda x: x * 2, arr))    # = map
 list(filter(lambda x: x > 1, arr)) # = filter
 
-# 归约
+#归约
 
 from functools import reduce
 reduce(lambda s, x: s + x, arr, 0) # = reduce
 
-# 查找
+#查找
 
 next((x for x in arr if x > 1), None)  # = find
 arr.index(2)    # 找索引（不存在会报错！）
 
-# 包含
+#包含
 
 2 in arr        # = includes
 
-# 删除
+#删除
 
 del arr[1]              # 删除索引1
 
-# 切片
+#切片
 
 arr[1:3]                # = slice
 
-# 展开追加
+#展开追加
 
 arr + [4]               # = [...arr, 4]
 ```
@@ -377,7 +377,7 @@ delete obj["age"];           // 删除
 "name" in obj                // 包含 
 ```
 ```python
-# Python
+#Python
 obj = {"name": "大帅", "age": 25}
 obj["name"]                  # 方括号（最常用）
 obj.get("name")              # 安全获取，不存在返回 None
@@ -385,29 +385,29 @@ obj.get("name", "默认值")     # 带默认值
 obj.keys()                   # 所有 key
 obj.values()                 # 所有 value
 obj.items()                  # (key, value) 元组
-# 包含
+#包含
 "name" in obj                # 如果键在字典obj里返回true，否则返回false
 
-# 浅拷贝
+#浅拷贝
 copy = obj.copy()            # 或 {**obj}
 
-# 合并
+#合并
 merged = {**obj, "role": "dev"}   # = {...obj, role: "dev"}
 
-# 删除
+#删除
 del obj["age"]
-# obj.pop(key[, default])       # key：要移除的键（必填）default：可选。如果 key 不存在，返回这个值；如果不提供且 key 不存在，则抛出 KeyError。
+#obj.pop(key[, default])       # key：要移除的键（必填）default：可选。如果 key 不存在，返回这个值；如果不提供且 key 不存在，则抛出 KeyError。
 obj.pop('name')
 ```
 >易错点：Python 字典没有 . 点语法！obj.name 报错，必须 obj["name"]。
 
-## 元组（tuple）—— JS 没有的新类型
+## 元组（tuple）— JS 没有的新类型
 ```python
-# 不可变的列表，用圆括号，不能修改
+#不可变的列表，用圆括号，不能修改
 point = (3, 4)
 x, y = point  # 解构（和 JS 数组解构一样）
 
-# 函数返回多个值（最常见用法）
+#函数返回多个值（最常见用法）
 def get_user():    
     return "大帅", 25
 name, age = get_user()        # 解构赋值
@@ -421,16 +421,16 @@ s.has(2);        // true
 s.size;          // 3
 ```
 ```python
-# 集合（set）是一个无序的不重复元素序列。
+#集合（set）是一个无序的不重复元素序列。
 s = {1, 2, 3}        # 直接字面量！比 JS 方便
 s.add(4)2 in s       # 用 in 代替 has
-# 移除元素
+#移除元素
 s.remove(3)          # 删除（不存在会报错）
 s.discard(2)         # 删除（不存在不报错）
 s.pop()             # 删除（不推荐使用因为集合是无序的排列的）
 len(s)               # 用 len() 代替 .size
 
-# 集合运算（Python 独有，非常强大）
+#集合运算（Python 独有，非常强大）
 a = {1, 2, 3}
 b = {2, 3, 4}
 a & b                # {2, 3}  交集
@@ -458,7 +458,7 @@ elif score >= 60:            # elif，不是 else if
 else:
     grade = "C"
 
-# Python 3.10+ 的 match/case（类似 switch）
+#Python 3.10+ 的 match/case（类似 switch）
 match command:
     case "start":
         print("启动")
@@ -466,7 +466,7 @@ match command:
         print("停止")
     case _:
         print("未知命令")
-# 综合练习
+#综合练习
 num = int(input("输入一个数字"))
 if num == 0:
     print(num)
@@ -481,11 +481,11 @@ else:
         case x if x>100:
             print("大正数")
 
-# case x if 条件: 中的 x 是捕获变量，会匹配任意值，然后由 if 守卫判断是否满足范围。
-# case _: 是通配符，匹配剩余所有情况。
+#case x if 条件: 中的 x 是捕获变量，会匹配任意值，然后由 if 守卫判断是否满足范围。
+#case _: 是通配符，匹配剩余所有情况。
 
-# 三目运算
-# 语法：值1 if 条件 else 值2
+#三目运算
+#语法：值1 if 条件 else 值2
 num1 = 5
 num2 = "大于5" if num1 > 5 else "小于等于5"
 print(num2) # 小于等于5
@@ -511,38 +511,38 @@ for index, item in enumerate(arr):   # = forEach 带索引 (推荐)
 for key, value in obj.items():  # 同时取 key 和 value（推荐）
     ...
 
-# range() 代替三段式 for
+#range() 代替三段式 for
 range(5)          # 0, 1, 2, 3, 4
 range(2, 8)       # 2, 3, 4, 5, 6, 7
 range(0, 10, 2)   # 0, 2, 4, 6, 8
 
-# 遍历列表
+#遍历列表
 fruits = ["apple", "banana", "cherry"]
 for fruit in fruits:
     print(fruit)
-# 遍历字符串
+#遍历字符串
 for ch in "abc":
     print(ch)  # a b c
-# 遍历字典
+#遍历字典
 d = {"a": 1, "b": 2}
 for key in d:
     print(key)
 
 for key, value in d.items():
     print(key, value)
-# 带索引遍历：enumerate()
+#带索引遍历：enumerate()
 fruits = ["apple", "banana", "cherry"]
 for i, fruit in enumerate(fruits):
     print(i, fruit)
-# 0 apple
-# 1 banana
-# 2 cherry
+#0 apple
+#1 banana
+#2 cherry
 
-# 指定起始索引
+#指定起始索引
 for i, fruit in enumerate(fruits, start=1):
     print(i, fruit)
 
-# 同时遍历多个序列：zip()
+#同时遍历多个序列：zip()
 names = ["Tom", "Jerry"]
 ages = [20, 22]
 for name, age in zip(names, ages):
@@ -554,7 +554,7 @@ count = 0
 while count < 5:
     print(count)
     count += 1
-# 无限循环
+#无限循环
 while True:
     cmd = input("输入命令（q退出）：")
     if cmd == "q":
@@ -563,19 +563,19 @@ while True:
 ```
 ### 循环控制语句
 ```python
-# break：立即结束整个循环，break 会立即终止整个循环，不再执行后续迭代。嵌套循环中，break 只跳出它所在的那一层。
+#break：立即结束整个循环，break 会立即终止整个循环，不再执行后续迭代。嵌套循环中，break 只跳出它所在的那一层。
 for i in range(10):
     if i == 3:
         break
     print(i)  # 0 1 2
 
-# continue：跳过本次循环，进入下一次， 只结束当前这一轮循环，直接进入下一次迭代，循环本身继续。
+#continue：跳过本次循环，进入下一次， 只结束当前这一轮循环，直接进入下一次迭代，循环本身继续。
 for i in range(5):
     if i == 2:
         continue
     print(i)  # 0 1 3 4
 
-# else 子句（Python 特有）
+#else 子句（Python 特有）
 for i in range(5):
     if i == 10:
         break
@@ -588,7 +588,7 @@ for i in range(5):
 else:
     print("不会执行")  # 被 break 中断，不执行
 
-# 这个特性常用于查找场景：
+#这个特性常用于查找场景：
 nums = [1, 3, 5, 7]
 target = 4
 for n in nums:
@@ -598,14 +598,14 @@ for n in nums:
 else:
     print("没找到")  # 输出：没找到
 
-# return：在函数中跳出循环并结束函数。
+#return：在函数中跳出循环并结束函数。
 def process(nums):
     for n in nums:
         if n < 0:
             return "发现负数，终止"
     return "全部正常"
 
-# sys.exit()：直接退出整个程序。
+#sys.exit()：直接退出整个程序。
 import sys
 
 for i in range(10):
@@ -643,7 +643,7 @@ def printinfo( arg1, *vartuple ):
    print (arg1)
    print (vartuple)
  
-# 调用printinfo 函数
+#调用printinfo 函数
 printinfo( 70, 60, 50 ) 
 '''
 输出: 
@@ -659,7 +659,7 @@ def printinfo( arg1, **vardict ):
    print (arg1)
    print (vardict)
  
-# 调用printinfo 函数
+#调用printinfo 函数
 printinfo(1, a=2,b=3)
 
 '''
@@ -679,7 +679,7 @@ print(x(5)) # 15
 
 sum = lambda arg1, arg2: arg1 + arg2
  
-# 调用sum函数
+#调用sum函数
 print ("相加后的值为 : ", sum( 10, 20 )) # 相加后的值为 :  30
 print ("相加后的值为 : ", sum( 20, 20 )) # 相加后的值为 :  40
 
@@ -690,12 +690,12 @@ print ("相加后的值为 : ", sum( 20, 20 )) # 相加后的值为 :  40
 def create_user(name, age, role):
     ...
 
-# 以下调用方式全部合法！
+#以下调用方式全部合法！
 create_user("大帅", 25, "dev")            # 位置参数
 create_user(name="大帅", age=25, role="dev")  # 关键字参数 ⭐
 create_user(role="dev", name="大帅", age=25)  # 顺序随意 ⭐⭐
 
-# 强制关键字参数（JS 做不到）
+#强制关键字参数（JS 做不到）
 def search(*, keyword, limit=10):   # * 后面的必须用关键字传
     ...
 
@@ -714,7 +714,7 @@ function log(fn) {
 const add = log((a, b) => a + b);
 ```
 ```python
-# Python 装饰器 —— 语法糖，更优雅
+#Python 装饰器 —— 语法糖，更优雅
 def log(fn):
     def wrapper(*args, **kwargs):
         print(f"调用 {fn.__name__}", args)
@@ -724,10 +724,10 @@ def log(fn):
 def add(a, b):
     return a + b
 
-# 链式装饰
-# @log
-# @timer
-# @auth
+#链式装饰
+#@log
+#@timer
+#@auth
 def handler(): ... # 从下往上：auth → timer → log
 ```
 ## 作用域
@@ -752,7 +752,7 @@ def outer():
     inner()
 
 outer()  # 输出: local
-# 如果 inner 里没有 x，就会往上一层找 enclosing，再没有就找 global，最后找内置。
+#如果 inner 里没有 x，就会往上一层找 enclosing，再没有就找 global，最后找内置。
 ```
 ### 全局作用域与局部作用域
 >定义在函数内部的变量拥有一个局部作用域，定义在函数外的拥有全局作用域。  
@@ -1010,7 +1010,7 @@ p = Person("张三", 10000)
 print(p._salary)   # 10000，语法上可以访问，但不推荐
 p._salary = 20000  # 也可以修改
 
-# 约定：_name 是给子类和内部使用的，外部应尽量避免直接访问。
+#约定：_name 是给子类和内部使用的，外部应尽量避免直接访问。
 ```
 
 **私有属性:** 以双下划线开头、且不以双下划线结尾的属性.。
@@ -1035,8 +1035,8 @@ p = Person("张三", 25)
 print(p.name)          # 张三（公有，正常访问）
 print(p.get_age())     # 25（通过公有方法访问私有属性）
 
-# print(p.__age)       # ❌ AttributeError: 'Person' object has no attribute '__age'
-# p.__age = 30         # 这只是新增了一个公有属性，不影响私有属性
+#print(p.__age)       # ❌ AttributeError: 'Person' object has no attribute '__age'
+#p.__age = 30         # 这只是新增了一个公有属性，不影响私有属性
 
 print(p._Person__age)  # 25 —— 名称改写后仍可访问（但不推荐）
 ```
@@ -1053,7 +1053,7 @@ print(p._Person__age)  # 25 —— 名称改写后仍可访问（但不推荐）
 |多继承|❌|✅|
 
 ```python
- # @property —— Python 的 getter/setter
+ #@property —— Python 的 getter/setter
 class Circle:
     def __init__(self, radius):
         self._radius = radius
@@ -1080,7 +1080,7 @@ async function main() {
     }
 ```
 ```python
-# Python —— 语法几乎一样！
+#Python —— 语法几乎一样！
 async def main():
     data = await fetch_data()
     users, posts = await asyncio.gather(    # = Promise.all
@@ -1135,7 +1135,7 @@ raise ValueError("出错了")            # raise 代替 throw
 |文件读写|fs.readFile|open("file").read()
 
 ```python
-# enumerate 和 zip —— 两大利器
+#enumerate 和 zip —— 两大利器
 fruits = ["apple", "banana", "cherry"]
 prices = [5, 3, 8]
 
@@ -1146,33 +1146,33 @@ for fruit, price in zip(fruits, prices):  # 同时遍历两个列表
     print(fruit, price)
 
 mapping = dict(zip(fruits, prices))       # 快速创建字典
-# {"apple": 5, "banana": 3, "cherry": 8}
+#{"apple": 5, "banana": 3, "cherry": 8}
 ```
 ## 列表推导式 —— 必须掌握
 JS 完全没有对应物，这是 Python 最强大的语法特性。
 ```python
-# 基本形式：[表达式 for 变量 in 可迭代对象 if 条件]
+#基本形式：[表达式 for 变量 in 可迭代对象 if 条件]
 
-# 映射（= map）
+#映射（= map）
 [x * 2 for x in range(5)]                    # [0, 2, 4, 6, 8]
 
-# 过滤（= filter）
+#过滤（= filter）
 [x for x in range(10) if x % 2 == 0]         # [0, 2, 4, 6, 8]
 
-# 映射 + 过滤
+#映射 + 过滤
 [x ** 2 for x in range(10) if x % 2 == 0]   # [0, 4, 16, 36, 64]
 
-# 嵌套循环（= flatMap）
+#嵌套循环（= flatMap）
 [(x, y) for x in range(3) for y in range(3)]
 
-# 字典推导式
+#字典推导式
 {name: len(name) for name in ["Python", "JS", "Go"]}
-# {"Python": 6, "JS": 2, "Go": 2}
+#{"Python": 6, "JS": 2, "Go": 2}
 
-# 集合推导式
+#集合推导式
 {x % 3 for x in range(10)}                   # {0, 1, 2}
 
-# 三元表达式结合
+#三元表达式结合
 ["even" if x % 2 == 0 else "odd" for x in range(5)]
 
 ```
@@ -1197,12 +1197,12 @@ open() 方法用于打开一个文件，并返回文件对象。
 - opener: 设置自定义开启器，开启器的返回值必须是一个打开的文件描述符。
 
 ```python
-# Python —— 超级简单
+#Python —— 超级简单
 with open("data.txt", "r", encoding="utf-8") as f:    # with = 自动关闭
     content = f.read()
 with open("output.txt", "w", encoding="utf-8") as f:
     f.write("hello")
-# 逐行读（大文件推荐）
+#逐行读（大文件推荐）
 with open("data.txt") as f:
     for line in f:      # 直接迭代文件对象！
         print(line.strip()) 
@@ -1297,7 +1297,7 @@ as variable 是可选的，用于将表达式结果赋值给变量
 with open('example.txt', 'r') as file:
     content = file.read()
     print(content)
-# 文件已自动关闭
+#文件已自动关闭
 ```
 
 ## 输入
@@ -1308,27 +1308,27 @@ with open('example.txt', 'r') as file:
 name = input("请输入名字：")
 print(f"你好，{name}")
 
-# 关键点：input() 的返回值永远是字符串（str），即使用户输入的是数字。
+#关键点：input() 的返回值永远是字符串（str），即使用户输入的是数字。
 age = input("请输入年龄：")   # 输入 18
 print(type(age))             # <class 'str'>
 print(age + 1)               # ❌ 报错，str 不能加 int
 
-# 必须手动转换类型
+#必须手动转换类型
 ge = int(input("请输入年龄："))      # 转整数
 print(age + 1)                       # 19
 
 price = float(input("请输入价格："))  # 转浮点数
 
-# 一次输入多个值
-# 用 split() 按空格分割，再用 map 转换
+#一次输入多个值
+#用 split() 按空格分割，再用 map 转换
 a, b = input("输入两个数（空格分隔）：").split()
 a, b = int(a), int(b)
 
-# 更简洁的写法
+#更简洁的写法
 a, b = map(int, input("输入两个数：").split())
 print(a + b)
 
-# 输入一串数字存入列表
+#输入一串数字存入列表
 nums = list(map(int, input("输入一串数字：").split()))
 print(nums)   # 输入: 1 2 3 4  →  [1, 2, 3, 4]
 ```
@@ -1343,13 +1343,13 @@ print("World")                  # Hello World
 ''' 格式化输出（三种方式） '''
 name, age = "Tom", 18
 
-# 1. f-string（推荐，3.6+）
+#1. f-string（推荐，3.6+）
 print(f"我叫{name}，今年{age}岁")
 
-# 2. str.format()
+#2. str.format()
 print("我叫{}，今年{}岁".format(name, age))
 
-# 3. % 格式化（旧式）
+#3. % 格式化（旧式）
 print("我叫%s，今年%d岁" % (name, age))
 ```
 
@@ -1363,7 +1363,7 @@ print("我叫%s，今年%d岁" % (name, age))
   - 作用域：模块内部定义的变量函数、类，默认都是该模块的“私有”或“公共”成员，外部通过导入机制访问。
 
 ```python
-# example.py (这就是一个模块)
+#example.py (这就是一个模块)
 def greet(name):
     return f"Hello, {name}!"
 
@@ -1448,20 +1448,20 @@ Python 提供了多种导入方式，选择合适的方式能保持代码整洁�
 
 1. 基本导入语法
 ```python
-# 场景1：导入整个模块
+#场景1：导入整个模块
 import math
 print(math.sqrt(16))  # 输出: 4.0
 
-# 场景2：从模块中导入特定对象
+#场景2：从模块中导入特定对象
 from math import sqrt, pi
 print(sqrt(16))       # 输出: 4.0
 print(pi)             # 输出: 3.14159...
 
-# 场景3：使用别名（Alias）
+#场景3：使用别名（Alias）
 import numpy as np
 import pandas as pd
 
-# 场景4：导入所有（不推荐，除非明确知道自己在做什么）
+#场景4：导入所有（不推荐，除非明确知道自己在做什么）
 from os import *
 ```
 2. 绝对导入 vs 相对导入（在包结构中）
@@ -1476,14 +1476,14 @@ my_project/
     └── math_module.py
 ```
 ```python
-# 绝对导入（推荐，清晰明了）
-# utils/helpers.py
+#绝对导入（推荐，清晰明了）
+#utils/helpers.py
 import my_project.utils.math_module  # 完整路径
-# 或者如果当前目录已在 sys.path 中：
+#或者如果当前目录已在 sys.path 中：
 import utils.math_module
 
-# 相对导入（适用于包内部） 使用 . 表示当前包，.. 表示父包。
-# utils/helpers.py
+#相对导入（适用于包内部） 使用 . 表示当前包，.. 表示父包。
+#utils/helpers.py
 from . import math_module      # 导入同级模块
 from ..core import engine      # 导入父包的 core 模块
 ```
@@ -1504,7 +1504,7 @@ def add(a, b):
 def subtract(a, b):
     return a - b
 
-# 这段代码只有在直接运行本文件时才会执行
+#这段代码只有在直接运行本文件时才会执行
 if __name__ == '__main__':
     print("正在直接运行计算器模块")
     print(f"2 + 3 = {add(2, 3)}")
@@ -1532,16 +1532,16 @@ my_package/
 ```
 **```__init\\__.py```** 的作用
 ```python
-# mylib/__init__.py
+#mylib/__init__.py
 
-# 方式1：显式导入子模块
+#方式1：显式导入子模块
 from .utils import greet, add
 from .helpers import do_something
 
-# 方式2：控制暴露的 API（推荐）
+#方式2：控制暴露的 API（推荐）
 __all__ = ['greet', 'add', 'do_something']
 
-# 方式3：自动发现并导入所有子模块（Python 3.3+ 支持隐式命名空间包，但通常仍需 __init__.py）
+#方式3：自动发现并导入所有子模块（Python 3.3+ 支持隐式命名空间包，但通常仍需 __init__.py）
 import pkgutil
 import sys
 
@@ -1557,23 +1557,74 @@ def _load_submodules(package, pattern):
 ```
 **使用包**
 ```python
-# 方式1：导入整个包
+#方式1：导入整个包
 import mylib
 mylib.greet("Alice")
 
-# 方式2：从包中导入特定内容
+#方式2：从包中导入特定内容
 from mylib import greet, add
 print(greet("Bob"))
 print(add(1, 2))
 
-# 方式3：导入子模块
+#方式3：导入子模块
 from mylib.helpers import do_something
 do_something()
 
-# 方式4：别名导入
+#方式4：别名导入
 from mylib.utils import greet as say_hello
 say_hello("Charlie")
 ```
+
+## json格式化数据
+### Python 对象 → JSON 字符串（序列化）
+```python
+import json
+
+data = {
+    "name": "张三",
+    "age": 25,
+    "city": "北京",
+    "hobbies": ["读书", "游泳"],
+    "is_student": False,
+    "score": None
+}
+
+#转换为 JSON 字符串
+json_str = json.dumps(data, ensure_ascii=False)
+print(json_str)
+#{"name": "张三", "age": 25, "city": "北京", "hobbies": ["读书", "游泳"], "is_student": false, "score": null}
+```
+**常用参数：**
+
+|参数|	说明
+|:--------|:--------|
+|ensure_ascii=False|	保留中文，不转成 \uXXXX
+|indent=4|	缩进格式化输出
+|sort_keys=True|	按键排序
+|separators=(',', ':')|	自定义分隔符
+
+### JSON 字符串 → Python 对象（反序列化）
+```python
+json_str = '{"name": "张三", "age": 25, "hobbies": ["读书", "游泳"]}'
+
+data = json.loads(json_str)
+print(data["name"])      # 张三
+print(data["hobbies"][0]) # 读书
+print(type(data))         # <class 'dict'>
+```
+
+### 读写 JSON 文件
+```python
+#写入文件
+with open("data.json", "w", encoding="utf-8") as f:
+    json.dump(data, f, ensure_ascii=False, indent=4)
+
+#读取文件
+with open("data.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+```
+>注意：dumps/loads 处理字符串，dump/load 处理文件对象。
+
 
 ## 避坑指南 —— JS 开发者最常踩的 10 个坑
 1. 缩进是语法：混用 Tab 和空格报 IndentationError，统一用 4 空格

@@ -242,7 +242,7 @@ export function searchArticles(query: string): ArticleMeta[] {
  *   [{ id: "1-什么是异步编程", text: "1. 什么是异步编程", level: 2 }, ...]
  */
 export function getTocFromContent(content: string): { id: string; text: string; level: number }[] {
-  const headingRegex = /^(#{2,4})\s+(.+)$/gm;
+  const headingRegex = /^(#{1,4})\s+(.+)$/gm;
   const toc: { id: string; text: string; level: number }[] = [];
   const slugger = new GithubSlugger();
   let match;

@@ -1,0 +1,94 @@
+---
+title: Python 随手记
+description: 在使用Python进行开发时遇到的一些问题
+date: 2026-09-21
+tags: [python]
+category: backend/python
+order: 4
+---
+
+>作为一个前端开发人员已经习惯了javaScript语言的编程习惯，在使用python开发过程中难免有些语法习惯不太一样，这篇笔记主要记录日常开发过程中的错误。
+
+# is None 与 is not None
+
+>这是一个非常经典的 Python 问题，在js中通常习惯使用 ==、===、!=来进行判断，但在python中判断"不是 None"时，应该用 a is not None，不要用 a != None。两者在大多数情况下结果相同，但语义和可靠性不同，is not 才是正确写法。
+
+## 推荐 is not None
+None 是一个单例对象（整个程序中只有一个 None）。is 比较的是身份（identity），即"是不是同一个对象"；== 比较的是值（equality）。
+
+判断"是不是 None"，本质是判断身份，所以用 is：
+```python
+a is None       # ✅ 判断 a 是否就是那个 None 对象
+a is not None   # ✅ 判断 a 是否不是 None
+```
+## != 可能被重载，is 不会
+这是最关键的区别。== / != 可以被自定义类重载，导致结果出乎意料；而 is 比较身份，无法被重载，永远可靠。
+```python
+class Weird:
+    def __eq__(self, other):
+        return True          # 声称和任何东西都相等
+    def __ne__(self, other):
+        return False         # 声称和任何东西都不"不相等"
+
+a = Weird()
+
+print(a is not None)   # True  ✅ 正确：a 确实不是 None
+print(a != None)       # False ❌ 错误：因为 __ne__ 被重载了
+```
+**注意**
+```python
+for a in [0, "", [], {}, False]:
+    print(a, a is not None, a != None)
+
+#0    True True
+#""   True True
+#[]   True True
+#{}   True True
+#False True True
+
+#不要用 if a: 来判断"不是 None"，因为 if a: 会把所有假值都过滤掉：
+a = 0
+if a is not None:   # ✅ 进入，0 不是 None
+    print("不是 None")
+
+if a:               # ❌ 不进入，因为 0 是假值
+    print("不会执行")
+
+```
+
+```python
+
+#调取deepSeek API
+from dotenv import load_dotenv
+import os
+import reques
+
+#加载 .env（默认查找当前工作目录的 .env）
+load_dotenv()
+
+#API url
+chat_url=os.getenv('CHAT_URL')
+#API KEY
+api_key=os.getenv('API_KEY')
+#请求头
+headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': f'Bearer {api_key}'
+}
+#数据
+date={
+    "model": "deepseek-chat",
+    "messages": [{"content": "你是一个百科专家","role": "system"},{"content": "世界第一高峰","role": "user"}],
+    "stream":True
+}
+if chat_url is not None:
+    # 发起请求
+    res = requests.post(chat_url, json=date, headers=headers)
+
+    if res.status_code == 200:
+        print()
+    else:
+        print(json.dumps(res.text))
+
+```

@@ -1,0 +1,163 @@
+---
+title: Python 常用模块
+description: 在Python经常使用的模块
+date: 2026-09-22
+tags: [python]
+category: backend/python
+order: 2
+---
+
+# load_dotenv 模块
+> load_dotenv 是一个流行的python库，用于从.env文件中加载环境变量。他允许你将敏感配置（如：API_key、数据库密码等）与代码分离，提高安全性和可维护性
+
+## 安装
+```pip install load-dotenv```
+## 基本用法
+1. 在项目更目录下创建一个```.env```文件对象
+
+    ```text
+    API_KEY:xxxxxx
+    ```
+> 注意：不要将.env文件提交至代码仓库中，将其添加到.gitignore中
+2. 在项目中使用load_dotenv
+    ```python
+    import os
+    # 引入load_dotenv
+    form dotenv import load_dotenv
+
+    # 加载 .env 文件中的环境变量到当前进程的环境变量中
+    load_dotenv()
+
+    # 现在可以通过os.getenv 或者 os.environ 访问
+    api_key = os.getenv("API_KEY")
+
+    ```
+
+# os 模块
+> os模块是python的一个内置模块无需安装可直接引入，通过os模块可以执行文件操作、目录操作、环境变量管理、进程管理等任务。
+
+## 获取当前工作目录
+os.getcwd()函数用于获取当前工作目录。
+```python
+import os
+current_directoy = os.getcwd()
+print("当前工作目录：", current_directoy) # D:\桌面\python_lean
+```
+
+## 创建目录
+os.mkid(path)函数用于创建一个新的目录，如果目录存在会抛FileExistsError异常
+```python
+import os
+os.mkid("new_directoy")
+```
+## 删除目录
+os.rmdir(path)函数用于删除空目录，如果目录不为空会抛出OSError异常
+```python
+import os
+os.rmdir("new_directoy")
+```
+## 删除文件
+os.remove(path)函数用于删除一个文件，如果文件不存在会抛FileNotFoundError异常。
+```python
+import os
+os.remove("file_to_delete.text")
+```
+## 重命名文件或目录
+os.rename(src,dst)函数用于重命名文件或目录，src是原始路径，dest是新路径。
+```python
+os.rename("old_name", "new_name")
+```
+## 获取环境变量
+os.getenv(key)函数用来获取指定的环境变量的值，如果不存在返回None。
+```python
+import os
+os.getenv("API_KEY")
+```
+
+# requests 模块
+> requests 模块是一个常用的HTTP请求库，可以方便地发起HTTP请求，并获取响应结果
+## 安装 requests
+``` pip install requests ```
+## 基本用法
+
+### 发送 GET 请求
+```python
+import requests
+#无搜索条件
+response = requests.get(url) # url 为请求地址
+print(response.staus_code)   # http 状态码
+print(response.text)         # 响应内容（字符串）
+print(response.json())       # 如果响应是JSON，可直接解析为字典
+
+#有查询条件
+query_params={
+    'page':1,
+    'limit': 10,
+    'ststus':'active'
+}
+response = requests.get(url, params=query_params)
+#实际请求url是 https:xxxx?page=1&limit=10&ststus=active
+
+#设置请求头
+headers ={
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+}
+
+response = requests.get(url, params=query_params, headers=headers)
+
+#设置cookie
+cookies = {'session_id':'abc123'}
+response = requests.get(url,cookies=cookies)
+
+#设置超时时间
+try:
+    response = requests.get(url, timeout=3)
+except requests.exceptions.Timeout:
+    print("请求超时")
+```
+
+### 发送 POST 请求
+```python
+import requests
+
+data = {'key': 'value'}
+response = requests.post(url, data=data)  # data用于表单数据，json用于json数据
+print(response.staus_code)
+print(response.json()) 
+
+payload = "{'name':'张三', 'age': 18}"
+response = requests.post(url, json=payload)
+```
+## 常用响应信息
+### status_code HTTP 状态码判断请求是否成功
+```python
+if response.status_code == 200:
+    print("请求成功")
+elif response.status_code == 404:
+    print("资源未找到")
+elif response.status_code == 500:
+    print("服务器内部错误")
+```
+### text 文本内容，将响应体解码为Unicode字符串。
+```python
+print(response.text)
+```
+### content 字节流内容，返回原始字节数据（bytes），适用于下载图片、视频、pdf等非文本文件
+```python
+with open('image.jpg','wb') as f
+    f.write(response.content)
+```
+### json() json解析，如果响应是合法的JSON格式，直接将其转换为python的字典或列表
+```python
+data = response.json()
+user_name = data['name']
+```
+
+### iter_lines() 逐行读取文本数据，设用于读取JSON Lines、CSV、纯文本日志等按行分割的数据
+```python
+for line in response.iter_lines():
+    if not line:
+        continue
+    line = line.decode('utf-8') # 手动解码为字符串
+```

@@ -46,6 +46,12 @@ interface ArticleContentProps {
  */
 const mdxComponents = {
   // 各级标题：添加锚点 id（由 rehype-slug 自动生成）和底部边框
+  h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h1
+      {...props}
+      className="text-3xl font-bold text-foreground mt-10 mb-4 pb-2 border-b border-border"
+    />
+  ),
   h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h2
       {...props}

@@ -86,8 +86,10 @@ export function TableOfContents({ toc }: TableOfContentsProps) {
             onClick={() => handleClick(item.id)}
             className={`block w-full text-left py-1.5 transition-colors hover:text-primary ${
               // 根据层级设置缩进：h2 无缩进，h3 缩进 1 级，h4 缩进 2 级
-              item.level === 3
-                ? 'pl-3'
+              item.level ===2
+                ? 'pl-2'
+                : item.level === 3
+                ? 'pl-4'
                 : item.level === 4
                 ? 'pl-6'
                 : ''
