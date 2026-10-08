@@ -1,0 +1,351 @@
+---
+title: MySQL 基础
+description: MySQL 基础学习
+date: 2026-10-08
+tags: [python, mysql]
+category: backend/mysql
+order: 1
+---
+
+# MySQL数据库常用数据类型
+
+**数值类型**
+
+|类型|大小|用途
+|:--------|:--------|:--------|
+|INT|4 Bytes|大整数值
+|FLOAT|4 Bytes|单精度浮点数值|
+|DOUBLE|8 Bytes|双精度浮点数值
+
+**字符串类型**
+
+|类型|大小|用途
+|:--------|:--------|:--------|
+|CHAR|0-255 bytes|定长字符串|
+|VARCHAR|0-65535 bytes|变长字符串|
+|TEXT|0-65 535 bytes|长文本数据|
+
+>注意：char(n) 和 varchar(n) 中括号中 n 代表字符的个数，并不代表字节个数，比如 CHAR(30) 就可以存储 30 个字符。
+
+**日期和时间类型**
+
+|类型	|大小	|格式	|用途
+|:--------|:--------|:--------|:--------|
+|DATE|3 bytes|YYYY-MM-DD|日期值|
+|TIME|3 bytes|HH:MM:SS|时间值或持续时间|
+|YEAR|1 bytes|YYYY|年份值|
+|DATETIME|8 bytes|YYYY-MM-DD hh:mm:ss|混合日期和时间值|
+|TIMESTAMP|4 bytes|YYYY-MM-DD hh:mm:ss|混合日期和时间值，时间戳|
+
+# 创建数据库
+
+>SQL 语句的大小写其实没有强制规定，MySQL 对关键字大小写不敏感，但实际开发中推荐关键字用大写，表名、字段名、库名用小写。
+
+**基础语法**
+``` CREATE DATABASE 数据库名 ```
+
+**指定字符集**
+
+``` CREATE DATABASE 数据库名 CHAR SET 'utf8mb4' ```
+
+
+```SQL
+CREATE DATABASE db_study CHAR SET 'utf8mb4'
+```
+>注意：如果数据库已经存在，执行 CREATE DATABASE 会错误。可以在 CREATE DATABASE 语句中添加 IF NOT EXISTS 子句
+
+```SQL
+CREATE DATABASE IF NOT EXISTS db_study CHAR SET 'utf8mb4'
+
+-- IF NOT EXISTS 的作用就是：如果数据库不存在就创建，如果已经存在就什么都不做，只给个警告。
+```
+
+# 选择数据库
+在 MySQL 中，要选择要使用的数据库，可以使用 USE 语句：``` USE 数据库名字 ```，选择数据库后，后续 SQL 查询和操作在指定的数据库上执行。
+
+# 删除数据库
+可以使用drop 命令删除数据库
+```text
+DROP DATABASE <database_name>;        -- 直接删除数据库，不检查是否存在
+或
+DROP DATABASE [IF EXISTS] <database_name>;
+```
+- IF EXISTS 是一个可选的子句，表示如果数据库存在才执行删除操作，避免因为数据库不存在而引发错误。
+- database_name 是你要删除的数据库的名称。
+
+# 创建数据表
+
+创建 MySQL 数据表需要以下信息：
+- 表名
+- 表字段名
+- 定义每个表字段的数据类型
+
+```SQL
+CREATE TABLE table_name(
+    column1 datatype,
+    column2 datatype,
+)
+```
+
+- table_name 是你要创建的表的名称。
+- column1, column2, ... 是表中的列名。
+- datatype 是每个列的数据类型。
+
+```SQL
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    birthdate DATE,
+    is_active BOOLEAN DEFAULT TRUE
+);
+```
+- id: 用户 id，整数类型，自增长，作为主键。
+- username: 用户名，变长字符串，不允许为空。
+- email: 用户邮箱，变长字符串，不允许为空。
+- birthdate: 用户的生日，日期类型。
+- is_active: 用户是否已经激活，布尔类型，默认值为 true。
+
+# MySQL数据库支持的约束条件
+
+## PRIMARY KEY（主键约束）
+每个表都需要有主键，并且主键唯一、不能为null、不能重复
+```SQL
+CREATE TABLE t_user (
+    id INT PRIMARY KEY,
+    name VARCHAR(20)
+);
+```
+
+## AUTO_INCREMENT（自增约束）
+通常配合主键使用，插入时不指定值，自动递增。
+```SQL
+CREATE TABLE t_user (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(20)
+);
+
+-- 插入 name 时不用管 id，它会自动 1、2、3……递增
+```
+
+## DEFAULT（默认值约束）
+不填该字段时，自动使用默认值。
+```SQL
+CREATE TABLE t_user (
+    id INT,
+    age INT DEFAULT 18,
+);
+
+-- 插入时不写 age，它会自动变成 18。
+```
+
+## NOT NULL（非空约束）
+字段值不能为空。
+```SQL
+CREATE TABLE t_user (
+    id INT NOT NULL,
+    name VARCHAR(20) NOT NULL
+);
+
+-- 插入数据时，name 必须给值，否则报错。
+```
+
+## UNIQUE（唯一约束）
+该列的值不能重复，但允许为 NULL（且多个 NULL 不算重复）。
+```SQL
+CREATE TABLE t_user (
+    id INT PRIMARY KEY,
+    phone VARCHAR(20) UNIQUE,
+    email VARCHAR(50) UNIQUE
+);
+```
+
+## FOREIGN KEY（外键约束）
+让两张表建立关联，保证子表的值必须在主表中存在。
+```SQL
+CREATE TABLE t_class (
+    id INT PRIMARY KEY,
+    class_name VARCHAR(20)
+);
+
+CREATE TABLE t_student (
+    id INT PRIMARY KEY,
+    name VARCHAR(20),
+    class_id INT,
+    FOREIGN KEY (class_id) REFERENCES t_class(id)
+);
+
+-- 这样 t_student.class_id 必须是 t_class 里已有的 id，否则插不进去。
+```
+
+# 操作数据
+
+## 增（INSERT INTO）
+向MySQL数据表插入数据通用的 INSERT INTO SQL语法
+```text
+INSERT INTO table_name (column1, column2, column3, ...)
+VALUES (value1, value2, value3, ...);
+```
+参数说明：
+- table_name 是你要插入数据的表的名称。
+- column1, column2, column3, ... 是表中的列名。
+- value1, value2, value3, ... 是要插入的具体数值。
+```SQL
+INSERT INTO users (username, email, birthdate, is_active)
+VALUES ('test', 'test@runoob.com', '1990-01-01', true);
+```
+如果要插入多行数据，可以在 VALUES 子句中指定多组数值：
+```SQL
+INSERT INTO users (username, email, birthdate, is_active)
+VALUES
+    ('test1', 'test1@runoob.com', '1985-07-10', true),
+    ('test2', 'test2@runoob.com', '1988-11-25', false),
+    ('test3', 'test3@runoob.com', '1993-05-03', true);
+```
+## 查（SELECT）
+MySQL 数据库使用 SELECT 语句来查询数据
+```text
+SELECT column1, column2, ...
+FROM table_name
+[WHERE condition]
+[ORDER BY column_name [ASC | DESC]]
+[LIMIT number];
+```
+- column1, column2, ... 是你想要选择的列的名称，如果使用 * 表示选择所有列。
+- table_name 是你要从中查询数据的表的名称。
+- WHERE condition 是一个可选的子句，用于指定过滤条件，只返回符合条件的行。
+- ORDER BY column_name [ASC | DESC] 是一个可选的子句，用于指定结果集的排序顺序，默认是升序（ASC）。
+- LIMIT number 是一个可选的子句，用于限制返回的行数。
+
+```SQL
+-- 选择所有列的所有行
+SELECT * FROM users;
+
+-- 选择特定列的所有行
+SELECT username, email FROM users;
+
+-- 添加 WHERE 子句，选择满足条件的行
+SELECT * FROM users WHERE is_active = TRUE;
+
+-- 添加 ORDER BY 子句，按照某列的升序排序
+SELECT * FROM users ORDER BY birthdate;
+
+-- 添加 ORDER BY 子句，按照某列的降序排序
+SELECT * FROM users ORDER BY birthdate DESC;
+
+-- 添加 LIMIT 子句，限制返回的行数
+SELECT * FROM users LIMIT 10;
+
+-- 使用 AND 运算符和通配符
+SELECT * FROM users WHERE username LIKE 'j%' AND is_active = TRUE;
+
+-- 使用 OR 运算符
+SELECT * FROM users WHERE is_active = TRUE OR birthdate < '1990-01-01';
+
+-- 使用 IN 子句
+SELECT * FROM users WHERE birthdate IN ('1990-01-01', '1992-03-15', '1993-05-03');
+```
+
+## 改 （UPDATE）
+
+如果要修改或更新 MySQL 中的数据，可以使用 UPDATE 命令来操作。
+```test
+UPDATE table_name
+SET column1 = value1, column2 = value2, ...
+WHERE condition;
+```
+- table_name 是你要更新数据的表的名称。
+- column1, column2, ... 是你要更新的列的名称。
+- value1, value2, ... 是新的值，用于替换旧的值。
+- WHERE condition 是一个可选的子句，用于指定更新的行。如果省略 WHERE 子句，将更新表中的所有行。
+
+```SQL
+UPDATE orders
+SET status = 'Shipped', ship_date = '2023-03-01'
+WHERE id = 1001;
+```
+
+## 删（DELETE FROM）
+可以使用 DELETE FROM 命令来删除 MySQL 数据表中的记录。
+```text
+DELETE FROM table_name
+WHERE condition;
+```
+- table_name 是你要删除数据的表的名称。
+- WHERE condition 是一个可选的子句，用于指定删除的行。如果省略 WHERE 子句，将删除表中的所有行。
+- 如果没有指定 WHERE 子句，MySQL 表中的所有记录将被删除。
+- 你可以在 WHERE 子句中指定任何条件
+- 您可以在单个表中一次性删除记录。
+
+```SQL
+--  删除符合条件的行
+DELETE FROM students WHERE graduation_year = 2021;
+
+-- 删除所有行
+DELETE FROM orders;
+```
+
+# 常用条件
+```SQL
+-- 等于
+SELECT * FROM users WHERE username = 'test';
+
+-- 不等于
+SELECT * FROM users WHERE username != 'runoob';
+
+-- 大于
+SELECT * FROM products WHERE price > 50.00;
+
+-- 小于
+SELECT * FROM orders WHERE order_date < '2023-01-01';
+
+--大于等于
+SELECT * FROM employees WHERE salary >= 50000;
+
+--小于等于
+SELECT * FROM students WHERE age <= 21;
+
+-- 组合条件（AND、OR）
+SELECT * FROM products WHERE category = 'Electronics' AND price > 100.00;
+
+SELECT * FROM orders WHERE order_date >= '2023-01-01' OR total_amount > 1000.00;
+
+-- 模糊匹配条件（LIKE）: 用来做模糊匹配
+SELECT * FROM customers WHERE first_name LIKE 'J%';
+
+--  IN条件: 判断字段值是否属于给定的几个值之一
+SELECT * FROM countries WHERE country_code IN ('US', 'CA', 'MX');
+
+-- NOT 条件: 取反
+SELECT * FROM products WHERE NOT category = 'Clothing';
+
+-- BETWEEN 条件: 判断字段值是否在闭区间 [最小值, 最大值] 内，包含两端
+SELECT * FROM orders WHERE order_date BETWEEN '2023-01-01' AND '2023-12-31';
+
+-- iS NULL 条件: 判断字段值是否为 NULL。
+SELECT * FROM employees WHERE department IS NULL;
+
+--  IS NOT NULL 条件: 判断字段值是否不为 NULL。
+SELECT * FROM customers WHERE email IS NOT NULL;
+
+```
+
+# LIKE
+LIKE 是 SQL 里用来做模糊匹配的关键字，通常配合通配符使用，放在 WHERE 子句里
+
+|通配符|	含义|	示例|
+|:--------|:--------|:--------|
+|%|	匹配任意个字符（包括 0 个）|	'张%' 匹配“张”、“张三”、“张abc”
+|_|	匹配恰好一个字符|	'张_' 匹配“张三”、“张四”，但不匹配“张”或“张三丰”
+
+|写法|	含义
+|:--------|:--------|
+|LIKE '张%'|	以“张”开头
+|LIKE '%三'|	以“三”结尾
+|LIKE '%三%'|	包含“三”
+|LIKE '张_'|	“张”开头且后面恰好一个字符
+|LIKE '_三%'|	第二个字是“三”
+|NOT LIKE '张%'|	不以“张”开头
+
+>LIKE 以 % 开头（比如 '%三'、'%三%'）时，无法使用索引，全表扫描，数据量大时很慢。如果能确定前缀，尽量写成 '张%' 这种形式，可以用上索引
+
