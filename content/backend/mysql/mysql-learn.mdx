@@ -349,3 +349,155 @@ LIKE 是 SQL 里用来做模糊匹配的关键字，通常配合通配符使用�
 
 >LIKE 以 % 开头（比如 '%三'、'%三%'）时，无法使用索引，全表扫描，数据量大时很慢。如果能确定前缀，尽量写成 '张%' 这种形式，可以用上索引
 
+# ORDER BY 排序
+如果需要对读取的数据进行排序，就可以使用 MySQL 的 ORDER BY 子句来设定想按哪个字段哪种方式来进行排序，再返回搜索结果。
+
+MySQL ORDER BY(排序) 语句可以按照一个或多个列的值进行升序（ASC）或降序（DESC）排序。
+
+```text
+SELECT column1, column2, ...
+FROM table_name
+ORDER BY column1 [ASC | DESC], column2 [ASC | DESC], ...;
+```
+- column1, column2, ... 是你要选择的列的名称，如果使用 * 表示选择所有列。
+- table_name 是你要从中查询数据的表的名称。
+- ORDER BY column1 [ASC | DESC], column2 [ASC | DESC], ... 是用于指定排序顺序的子句。ASC 表示升序（默认），DESC 表示降序。
+- 可以使用任何字段来作为排序的条件，从而返回排序后的查询结果。
+- 可以设定多个字段来排序。
+- 可以使用 ASC 或 DESC 关键字来设置查询结果是按升序或降序排列。 默认情况下，它是按升序排列。
+- 可以添加 WHERE...LIKE 子句来设置条件。
+
+```SQL
+SELECT * FROM student ORDER BY age DESC;
+-- 按照年龄倒序排列
+```
+
+# GROUP BY 分组
+GROUP BY 语句根据一个或多个列对结果集进行分组。
+```text
+SELECT column1, aggregate_function(column2)
+FROM table_name
+WHERE condition
+GROUP BY column1;
+```
+- column1：指定分组的列。
+- aggregate_function(column2)：对分组后的每个组执行的聚合函数。
+- table_name：要查询的表名。
+- condition：可选，用于筛选结果的条件。
+
+**练习**
+```SQL
+-- SQL分组练习
+
+-- 选择数据库
+USE db_study;
+
+-- 创建数据表
+CREATE TABLE score(
+	id INT PRIMARY KEY AUTO_INCREMENT,
+    student_name VARCHAR(50) NOT NULL,
+    subject VARCHAR(50) NOT NULL,
+    score INT NOT NULL
+);
+
+-- 插入数据
+INSERT INTO score(student_name,subject,score) VALUES
+('张三', '语文', 85),
+('张三', '数学', 92),
+('张三', '英语', 78),
+('李四', '语文', 90),
+('李四', '数学', 88),
+('李四', '英语', 95),
+('王五', '语文', 70),
+('王五', '数学', 60),
+('王五', '英语', 55),
+('赵六', '语文', 88),
+('赵六', '数学', 76),
+('赵六', '英语', 82);
+
+-- 查看所有数据
+SELECT * FROM score;
+
+-- 使用分组查看每个学生的总分
+SELECT student_name, SUM(score) AS 总分 FROM score GROUP BY student_name;
+
+-- 统计每个学生的总分、平均分、最高分、考试科目数
+SELECT student_name,
+SUM(score) AS 总分,
+AVG(score) AS 平均分,
+MAX(score) AS 最高分,
+MIN(score) AS 最低分,
+COUNT(subject)  AS 科目
+FROM score 
+GROUP BY student_name;
+
+-- 每科平均分，最高分、最低分
+SELECT subject,
+AVG(score) AS 平均分,
+MAX(score) AS 最高分,
+MIN(score) AS 最低分
+FROM score
+GROUP BY subject;
+
+-- 每个学生每科的成绩
+SELECT student_name, subject, score
+FROM score
+GROUP BY student_name, subject, score;
+
+-- 只看>=60的成绩，在统计每个学生的总分
+SELECT student_name, SUM(score) AS 总分
+FROM score
+WHERE score>=60
+GROUP BY student_name;
+
+-- 找出总分超过250的学生
+SELECT student_name, SUM(score) AS 总分
+FROM score
+GROUP BY student_name
+HAVING SUM(score)>250;
+
+-- 只统计及格的科目，找出及格科目总分超过 250 的学生
+SELECT student_name, SUM(score) AS 总分
+FROM score
+WHERE score>=60
+GROUP BY student_name
+HAVING SUM(score)>250;
+```
+
+>WHERE 管分组前，HAVING 管分组后；聚合函数只能放 HAVING。
+
+**执行顺序**
+
+```SQL
+SELECT   student_name, SUM(score)    -- ⑤ 最后选出要显示的列
+FROM     score                       -- ① 先确定表
+WHERE    score >= 60                 -- ② 分组前过滤
+GROUP BY student_name                -- ③ 分组
+HAVING   SUM(score) > 250            -- ④ 分组后过滤
+ORDER BY SUM(score) DESC;            -- ⑥ 排序
+```
+
+## 子查询
+子查询 = 写在括号里的一条 SELECT 语句，它先执行，把结果交给外层查询用。
+```SQL
+SELECT ... FROM 表 WHERE 字段 运算符 (SELECT ... FROM ...);
+                              ↑ 这就是子查询
+```
+```SQL
+-- 查询高于全体平均分的成绩
+SELECT student_name, subject, score
+FROM score
+WHERE score>(SELECT AVG(score) FROM score);
+```
+
+# COMMENT 注释
+```SQL
+CREATE TABLE student (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '学号，主键',
+    name VARCHAR(50) NOT NULL COMMENT '学生姓名',
+    gender CHAR(1) COMMENT '性别：M=男，F=女',
+    age INT COMMENT '年龄',
+    class VARCHAR(50) COMMENT '所在班级'
+);
+```
+
