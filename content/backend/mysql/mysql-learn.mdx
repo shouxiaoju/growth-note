@@ -37,6 +37,37 @@ order: 1
 |DATETIME|8 bytes|YYYY-MM-DD hh:mm:ss|混合日期和时间值|
 |TIMESTAMP|4 bytes|YYYY-MM-DD hh:mm:ss|混合日期和时间值，时间戳|
 
+**MySQL 中没有独立的布尔数据类型**
+
+BOOLEAN 和 BOOL 只是 TINYINT(1) 的别名，底层用整数存储：
+
+|写法|	实际类型|	取值
+|:--------|:--------|:--------|
+|BOOLEAN|	TINYINT(1)|	0 = FALSE，非 0 = TRUE
+|BOOL|	TINYINT(1)|	同上
+
+```SQL
+CREATE TABLE users (
+    id INT PRIMARY KEY,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_deleted BOOL DEFAULT FALSE
+);
+-- 插入时可以用 TRUE / FALSE（分别等价于 1 / 0）
+
+INSERT INTO users (id, is_active, is_deleted)
+VALUES (1, TRUE, FALSE);
+
+-- 等价于
+INSERT INTO users (id, is_active, is_deleted)
+VALUES (1, 1, 0);
+
+-- 查询
+SELECT * FROM users WHERE is_active = TRUE;
+SELECT * FROM users WHERE is_active;        -- 非 0 即为真
+SELECT * FROM users WHERE NOT is_deleted;
+```
+
+
 # 创建数据库
 
 >SQL 语句的大小写其实没有强制规定，MySQL 对关键字大小写不敏感，但实际开发中推荐关键字用大写，表名、字段名、库名用小写。
@@ -490,6 +521,135 @@ FROM score
 WHERE score>(SELECT AVG(score) FROM score);
 ```
 
+# 多表联查
+真实业务里数据是拆开存的，避免重复冗余：
+- student：学生基本信息（姓名、班级）
+- course：课程信息（课程名、学分）
+- score：谁 选了 哪门课 考了多少分
+
+成绩表只存 id，不存姓名和课程名，要用时再"连"起来查。
+
+## 常用的4种链接
+**准备数据**
+
+```SQL
+-- 创建数据库
+CREATE DATABASE db_student;
+
+-- 选择数据库
+USE db_student;
+
+-- 创建学生表
+CREATE TABLE student (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50),
+    class VARCHAR(50)
+);
+-- 插入学生信息
+INSERT INTO student (id, name, class) VALUES
+(1,'张三','计算机1班'),
+(2,'李四','计算机1班'),
+(3,'王五','计算机2班'),
+(4,'赵六','计算机2班'),
+(5,'孙七','计算机2班');  -- 孙七没有选择课程
+
+-- 课程表
+CREATE TABLE course (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    course_name VARCHAR(50),
+    credit INT
+);
+INSERT INTO course (id, course_name, credit) VALUES
+(1,'语文',3),
+(2,'数学',4),
+(3,'英语',2),
+(4,'体育',1); 
+
+-- 成绩表（只存 id 关联）
+CREATE TABLE score (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    student_id INT,
+    course_id INT,
+    score INT
+);
+INSERT INTO score (student_id, course_id, score) VALUES
+(1,1,85),(1,2,92),(1,3,78),
+(2,1,90),(2,2,88),(2,3,95),
+(3,1,70),(3,2,60),
+(4,1,88),(4,3,82);
+```
+### INNER JOIN 内链接
+**基础语法**
+```text
+SELECT 字段
+FROM 表A
+INNER JOIN 表B
+NO 表A.关联字段 = 表B.关联字段
+WHERE 筛选条件
+```
+```SQL
+-- 查询每个学生的成绩
+SELECT name, score
+FROM student st
+INNER JOIN score sc ON st.id=sc.student_id;
+
+-- 三表联查——查出"谁 考了 哪门课 多少分"
+SELECT st.name,co.course_name,sc.score
+FROM score sc
+INNER JOIN student st ON sc.student_id = st.id
+INNER JOIN course co ON sc.course_id = co.id;
+
+-- 每个学生的总分，且只显示总分 ≥ 250 的。
+SELECT st.name, SUM(sc.score) AS 总分
+FROM student st
+INNER JOIN score sc ON st.id=sc.student_id
+GROUP BY st.name
+HAVING SUM(sc.score)>250;
+```
+### LEFT JOIN（左外连接）
+左表所有行都保留，右表匹配不上的用 NULL 填充。
+
+```SQL
+-- 查询所有学生（含没选课的），显示其成绩
+SELECT st.name, sc.score
+FROM student st
+LEFT JOIN score sc ON st.id = sc.student_id;
+
+-- 结果中 孙七 会出现，score 列是 NULL
+
+-- 找出"没选任何课"的学生
+SELECT st.name, sc.student_id
+FROM student st
+LEFT JOIN score sc ON st.id = sc.student_id
+WHERE sc.student_id IS NULL;
+
+-- 统计每个学生选了几门课（含 0 门）
+SELECT st.name, COUNT(sc.id) AS 选课数
+FROM student st
+LEFT JOIN score sc ON st.id = sc.student_id
+GROUP BY st.name;
+```
+
+### RIGHT JOIN（右外连接）
+保留右表全部，和 LEFT JOIN 对称。
+```SQL
+-- 查询所有课程，显示选课情况
+SELECT co.course_name, st.name
+FROM course co
+RIGHT JOIN student st ON co.credit = st.id
+WHERE co.course_name IS NOT NULL; -- 孙七没选课
+```
+
+### 两边都保留
+MySQL 不支持 FULL OUTER JOIN。要"两边都保留"，用 LEFT JOIN + UNION + RIGHT JOIN 模拟：
+```SQL
+SELECT s.name, sc.score
+FROM student s LEFT JOIN score sc ON s.id = sc.student_id
+UNION
+SELECT s.name, sc.score
+FROM student s RIGHT JOIN score sc ON s.id = sc.student_id;
+```
+
 # COMMENT 注释
 ```SQL
 CREATE TABLE student (
@@ -501,3 +661,27 @@ CREATE TABLE student (
 );
 ```
 
+# UNION
+把两个或多个 SELECT 的结果集，上下叠在一起，合成一个结果。
+
+```text
+SELECT ... FROM 表A
+UNION
+SELECT ... FROM 表B;
+```
+
+**UNION vs UNION ALL**
+
+|写法|	行为
+|:-------|:-------|
+|UNION|	去重（合并后删掉重复行）
+|UNION ALL|	不去重（原样叠加，保留所有行）
+
+# 索引
+MySQL 索引是一种数据结构，用于加快数据库查询的速度和性能，命中索引才能提高查询效率，查询时需要使用上索引，索引才能生效。
+
+**注意**
+- 占用额外磁盘空间
+- 增删改数据时要同步维护索引，降低写入速度
+
+所以索引不是越多越好，而是为高频、高选择性的查询条件建立。
