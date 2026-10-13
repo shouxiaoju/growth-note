@@ -39,9 +39,10 @@ console.log(Person.prototype.constructor == Person) // true
 function mynew(Func, ...args) {
 // 1.创建一个新对象
 const obj = {}
-// 2.新对象原型指向构造函数原型对象
-obj.proto = Func.prototype
-// 3.将构建函数的this指向新对象
+// 2.新对象原型指向构造函数原型对象,这样新对象就能访问构造函数原型上的属性和方法。
+obj.__proto__ = Func.prototype
+// 等价于 Object.setPrototypeOf(obj, Foo.prototype)
+// 3.把构造函数里的 this 绑定到这个新对象，并执行构造函数
 let result = Func.apply(obj, args)
 // 4.根据返回值判断
 return result instanceof Object ? result : obj
@@ -318,7 +319,7 @@ const getType = (s) => {
 ## 事件循环
 ### 浏览器的进程模型
 **进程：**  程序运行需要有它自己专属的内存空间，可以把这块内存空间简单的理解为进程，每个应用至少有一个进程，进程之间相互独立，即使要通信，也需要双方同意。  
-**线程：**有了进程后，就可以运行程序的代码，运行代码的「人」称之为「线程」。一个进程至少有一个线程，所以在进程开启后会自动创建一个线程来运行代码，该线程称之为主线程。如果程序需要同时执行多块代码，主线程就会启动更多的线程来执行代码，所以一个进程中可以包含多个线程。
+**线程：** 有了进程后，就可以运行程序的代码，运行代码的「人」称之为「线程」。一个进程至少有一个线程，所以在进程开启后会自动创建一个线程来运行代码，该线程称之为主线程。如果程序需要同时执行多块代码，主线程就会启动更多的线程来执行代码，所以一个进程中可以包含多个线程。
 >浏览器是一个多进程多线程的应用程序
 
 浏览器主要的进程有：
@@ -1206,3 +1207,274 @@ Promise.any([
 
 只要参数实例有一个变成fulfilled状态，包装实例就会变成fulfilled状态；如果所有参数实例都变成rejected状态，包装实例就会变成rejected状态。  
 Promise.any()跟Promise.race()方法很像，只有一点不同，就是Promise.any()不会因为某个 Promise 变成rejected状态而结束，必须等到所有参数 Promise 变成rejected状态才会结束。
+
+## async/await
+>async/await 是 ES2017 引入的异步编程语法糖，本质是 Promise + Generator 的封装，让异步代码写起来像同步代码。
+
+- async：声明一个函数是异步函数，返回值一定是 Promise
+- await：等待一个 Promise 完成，只能在 async 函数内使用
+
+## async 函数的返回值自动包装成 Promise
+```javaScript
+async function f1() { return 1; }
+f1(); // Promise {<fulfilled>: 1}
+
+async function f2() { return Promise.resolve(2); }
+f2(); // Promise {<fulfilled>: 2}，会展开
+
+async function f3() { throw new Error('err'); }
+f3(); // Promise {<rejected>: Error: err}
+```
+
+### await 会暂停当前 async 函数，但不阻塞主线程
+```javaScript
+async function f() {
+  console.log('A');
+  await new Promise(r => setTimeout(r, 1000));
+  console.log('B'); // 1 秒后打印
+}
+f();
+console.log('C'); // 立即打印
+// 输出：A → C → (1秒后) B
+```
+>async/await 不是把异步变成同步，而是Promise的消费端语法，async函数调用后返回Promise函数内容遇到await，会把右侧包装成Promise然后注册一个回调把函数剩余部分放进微任务中，当前调用栈立即让出主线程继续处理其他任务。
+因此它不会阻塞浏览器只暂停这个async函数内容的继续执行。
+
+# 网络相关的内容
+
+## 域问题
+
+**什么是跨域**
+
+跨域主要就是浏览的同源策略造成的。同源策略是指协议、域名、端口号必须一致。
+
+同源策略限制的内容：
+1. Cookie 、LocalStorage 和 IndexDB无法读取。
+2. 无法获取或操作另一个资源的DOM。
+3. AJAX请求不能发送
+
+**jsonp原理是什么**
+
+浏览器的同源策略，把跨域请求都禁止了，但是 页面中 带 src 的标签是个例外，比如sript，img，iframe，a这些标签的外链是不受同源策略的限制的。jsonp就是利用上面scrpt 标签的特性来进行跨域数据访问的，实际带callback的json就是jsonp
+
+1. 与服务端约定好一个回调的函数名，在客户端定义好这个函数，在请求url中添加 callback = 函数名的查询字符
+```javaScript
+var flightHandler = function (data) {
+  alert('你查询的航班结果是：票价 ' + data.price + ' 元，' + '余票 ' + data.tickets + ' 张。');
+};
+
+var url = "http://localhost:8080/jsonp?callback=flightHandler";
+var script = document.createElement('script');
+script.setAttribute('src', url);
+document.getElementsByTagName('head')[0].appendChild(script);
+```
+2. 服务端接收到请求之后，将函数名和需要返回的数据拼接成“函数名（data）”函数执行的方式返回
+```javaScript
+app.use(async (ctx, next) => {
+  if (ctx.path == '/jsonp' && ctx.querystring) {
+    //querystring处理
+    let queryArr = ctx.querystring.split("&");
+    let queryObj = {};
+    queryArr.forEach((item) => {
+      let tmp = item.split("="); 
+      queryObj[tmp[0]] = tmp[1];
+    })
+    const callback = queryObj['callback'];
+    const obj = {
+      price: '18',
+      tickets: 33
+    }
+    const args = JSON.stringify(obj);
+    ctx.body = `${callback}(${args})`;
+  }
+  await next();
+})
+```
+3. 页面接收到数据后，解析完直接执行这个回调函数，这时数据就成功传输到了客户端
+
+优点：兼容性好。
+
+缺点：只能get请求、安全性差
+
+**CORS（跨域资源共享）**
+
+支持所有类型的http请求，需要服务端设置access-control-allow-origin即可。如果需要带上cookie前后端都需要进行设置。
+携带cookie
+
+前端请求时在request对象中配置"withCredentials": true；
+
+服务端在response的header中配置"Access-Control-Allow-Origin", "http://xxx:${port}";
+
+服务端在response的header中配置"Access-Control-Allow-Credentials", "true"
+
+1. 在前端请求的时候设置request对象的属性withCredentials为true;
+```javaScript
+// 修改跨域请求的代码
+crossButton.onclick = function () {
+    axios({
+      withCredentials: true, // ++ 新增
+      method: "get",
+      url: "http://localhost:8003/anotherService",
+    }).then((res) => {
+      console.log(res);
+    });
+};
+```
+2. 在服务端设置Access-Control-Allow-Origin和Access-Control-Allow-Credentials
+```javaScript
+// 在所有路由前增加，可以拦截所有请求
+app.all("*", (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:8000");
+  res.header("Access-Control-Allow-Credentials", "true"); // ++ 新增
+  next();
+});
+```
+**document.domain + iframe**
+
+只有在主域相同的时候才能使用该方法
+
+实现原理：两个页面都通过js强制设置document.domain为基础主域，就实现了同域。
+
+在http://www.a.com/a.html中：
+
+```javaScript
+document.domain = 'a.com';
+var ifr = document.createElement('iframe');
+ifr.src = 'http://www.script.a.com/b.html';
+ifr.display = none;
+document.body.appendChild(ifr);
+ifr.onload = function(){
+    var doc = ifr.contentDocument || ifr.contentWindow.document;
+    //在这里操作doc，也就是b.html
+    ifr.onload = null;
+};
+```
+在http://www.script.a.com/b.html中：
+
+```javaScript
+document.domain = 'a.com'; 
+```
+
+**window.name + iframe跨域**
+
+window.name 的美妙之处：name 值在不同的页面（甚至不同域名）加载后依旧存在，并且可以支持非常长的 name 值（2MB）。
+
+1. 创建http://a.com/cs1.html
+2. 创建http://a.com/proxy.html，并加入如下代码
+
+```javaScript
+<head>
+  <script>
+  function proxy(url, func){
+    var isFirst = true,
+        ifr = document.createElement('iframe'),
+        loadFunc = function(){
+          if(isFirst){
+            ifr.contentWindow.location = 'http://a.com/cs1.html';
+            isFirst = false;
+          }else{
+            func(ifr.contentWindow.name);
+            ifr.contentWindow.close();
+            document.body.removeChild(ifr);
+            ifr.src = '';
+            ifr = null;
+          }
+        };
+ 
+    ifr.src = url;
+    ifr.style.display = 'none';
+    if(ifr.attachEvent) ifr.attachEvent('onload', loadFunc);
+    else ifr.onload = loadFunc;
+ 
+    document.body.appendChild(iframe);
+  }
+</script>
+</head>
+<body>
+  <script>
+    proxy('http://www.baidu.com/', function(data){
+      console.log(data);
+    });
+  </script>
+</body>
+```
+3. 在http://b.com/cs1.html中包含：
+```javaScript
+<script>
+    window.name = '要传送的内容';
+</script>
+```
+**postMessage跨域**
+
+postMessage是HTML5 XMLHttpRequest Level 2中的API，且是为数不多可以跨域操作的window属性之一，它可用于解决以下方面的问题用法：
+- 页面和其打开的新窗口的数据传递
+- 页面与嵌套的 iframe 消息传递
+- 多窗口之间消息传递
+
+postMessage(message,origin)方法接受两个参数:
+
+message： html5规范支持任意基本类型或可复制的对象，但部分浏览器只支持字符串，所以传参时最好用JSON.stringify()序列化。
+
+origin： 协议+主机+端口号，也可以设置为"*"，表示可以传递给任意窗口，如果要指定和当前窗口同源的话设置为"/"。
+
+## POST请求为什么有时候会发送两次请求
+
+浏览器发送的 OPTIONS 请求，它不是我们业务代码手动发起的，发 OPTIONS 请求的本质，是浏览器在跨域场景下的一种安全预检机制，叫 CORS Preflight（跨域预检）
+
+### 核心原因
+当你在 a.com 的页面里，用 JS 向 b.com 发请求时，这属于跨域请求。浏览器出于安全考虑，不敢直接放行，因为：
+
+- 如果这个请求带着用户身份（Cookie、Token）打到了 b.com，可能会冒用用户身份做危险操作（比如转账、删数据）
+
+- 有些请求一旦发出去，服务器就已经执行了副作用，来不及撤回
+
+所以浏览器定了个规矩：对于那些"可能产生副作用"的跨域请求，先发一个 OPTIONS 探路，问服务器同不同意，同意了再发真正的请求。
+
+这个 OPTIONS 就是"预检"，它不携带真正的业务数据，只是一个"询问"。
+
+### 什么样的请求会触发预检
+浏览器把请求分成两类：
+- 简单请求（不预检，直接发）
+- 非简单请求（先预检，再发）
+
+#### 简单请求
+同时满足以下所有条件：
+- 方法是 GET、HEAD、POST 之一
+- 请求头只能是 Accept、Accept-Language、Content-Language、Content-Type 等少数几个
+- Content-Type 只能是 application/x-www-form-urlencoded、multipart/form-data、text/plain
+- 没有自定义请求头
+
+#### 非简单请求
+只要违反上面任意一条，就会触发 OPTIONS。比如：
+
+|情况|	是否预检
+|:--------|:--------|
+|POST + application/json|	会（json 不是简单类型）
+|带了 Authorization 头|	会
+|带了自定义头 X-Token|	会
+|用 PUT / DELETE	|会
+|POST + text/plain	|不会
+
+>现在前后端分离的项目几乎都用 application/json，所以几乎每个跨域请求都会先发 OPTIONS。 这就是你觉得"怎么老发 OPTIONS"的原因
+
+### 想减少 OPTIONS 次数怎么办
+后端设置 Access-Control-Max-Age，让预检结果缓存久一点
+
+如果前后端同源（用 Nginx 反代，让接口和页面同域名），就完全不跨域，不会预检
+
+### 几个容易混淆的点
+1. 同源请求不会预检
+
+只有跨域（协议、域名、端口任一不同）才会。同源请求直接发，浏览器不管。
+
+2. OPTIONS 不是你前端代码写的
+
+是浏览器自动发的，你在代码里看不到它。所以很多人第一次遇到会懵："我没写 OPTIONS 啊？"
+
+3. 预检结果会被缓存
+
+通过 Access-Control-Max-Age 控制。设大一点（比如 86400 秒），同一接口在缓存期内就不会反复发 OPTIONS 了。没设的话，Chrome 默认只缓存 5 秒，所以你会看到每次都预检。
+
+4. 预检失败 = 请求失败
+
+后端必须能处理 OPTIONS 方法。很多后端框架默认不处理 OPTIONS，就会导致预检失败。需要在路由或中间件里放行 OPTIONS。
