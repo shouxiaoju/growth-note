@@ -11,20 +11,20 @@ order: 5
 ```text
 pip install fastapi
 
-# FastAPI 是一个 ASGI 框架，需要一个 ASGI 服务器来运行。最常用的是 Uvicorn：
+#FastAPI 是一个 ASGI 框架，需要一个 ASGI 服务器来运行。最常用的是 Uvicorn：
 
 pip install "uvicorn[standard]"
 ```
 
 ## 创建一个简单应用
 ```python
-# 引入fastapi
+#引入fastapi
 from fastapi import FastAPI
 
-# 创建 FastAPI 应用实例
+#创建 FastAPI 应用实例
 app = FastAPI()
 
-# 定义根路径的路由（基础路由）
+#定义根路径的路由（基础路由）
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -50,10 +50,10 @@ FastAPI 新版本提供了 fastapi 命令行工具，可以更方便地运行应
 fastapi dev 会自动查找项目中的 FastAPI 应用并启动开发服务器，等同于 uvicorn main:app --reload。
 
 ```text
-# 开发模式（自动重载）
+#开发模式（自动重载）
 fastapi dev
 
-# 生产模式
+#生产模式
 fastapi run
 ```
 # 练习
@@ -153,7 +153,7 @@ async def getList(id:int):
 带类型的路径参数会自动做数据校验和转换。比如 item_id: int，如果传入非整数，FastAPI 会返回 422 错误.
 '''
 
-# 查询参数
+#查询参数
 @router.get('/item2')
 async def getList(id:int,name:str):
     return {'id':id,'name':name}
@@ -267,12 +267,12 @@ from fastapi import Depends, FastAPI
 
 app = FastAPI()
 
-# 1. 定义依赖函数
+#1. 定义依赖函数
 def common_parameters(q: str | None = None, skip: int = 0):
     return {"name": name, "age": age}
 
 
-# 2. 在路由中使用依赖
+#2. 在路由中使用依赖
 @app.get("/items")
 async def read_items(commons: dict = Depends(common_parameters)):
     # commons 接收依赖函数的返回值
@@ -295,7 +295,7 @@ from fastapi import Depends, FastAPI
 
 app = FastAPI()
 
-# 用类声明依赖
+#用类声明依赖
 class CommonQueryParams:
     def __init__(self, q: str | None = None, skip: int = 0, limit: int = 100):
         self.q = q
@@ -303,7 +303,7 @@ class CommonQueryParams:
         self.limit = limit
 
 
-# 使用类作为依赖
+#使用类作为依赖
 @app.get("/items/")
 async def read_items(commons: Annotated[CommonQueryParams, Depends()]):
     return {"q": commons.q, "skip": commons.skip, "limit": commons.limit}
@@ -318,11 +318,11 @@ from fastapi import Depends, FastAPI
 
 app = FastAPI()
 
-# 依赖函数
+#依赖函数
 def query_extractor(q: str | None = None):
     return q
 
-# 子依赖：依赖 query_extractor
+#子依赖：依赖 query_extractor
 def query_checker(q: str = Depends(query_extractor)):
     if q == "admin":
         # 子依赖可以进行校验
@@ -330,7 +330,7 @@ def query_checker(q: str = Depends(query_extractor)):
     return q
 
 
-# 路由使用子依赖
+#路由使用子依赖
 @app.get("/items/")
 async def read_items(q: str = Depends(query_checker)):
     return {"q": q}
@@ -345,17 +345,17 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 
 app = FastAPI()
 
-# 依赖：校验 API Key
+#依赖：校验 API Key
 async def verify_api_key(x_api_key: str = Header()):
     if x_api_key != "secret-key":
         raise HTTPException(status_code=400, detail="X-API-Key invalid")
 
-# 在装饰器中使用依赖，不需要返回值
+#在装饰器中使用依赖，不需要返回值
 @app.get("/items/", dependencies=[Depends(verify_api_key)])
 async def read_items():
     return [{"item": "Foo"}]
 
-# 对整个路由组使用依赖
+#对整个路由组使用依赖
 @app.get("/users/", dependencies=[Depends(verify_api_key)])
 async def read_users():
     return [{"user": "Bar"}]
@@ -369,7 +369,7 @@ from fastapi import Depends, FastAPI
 
 app = FastAPI()
 
-# 使用 yield 的依赖：请求前创建连接，请求后关闭连接
+#使用 yield 的依赖：请求前创建连接，请求后关闭连接
 def get_db():
     db = "database_connection"  # 模拟创建数据库连接
     try:
@@ -411,24 +411,25 @@ async def read_item(item_id: int):
 
 ### response_model 参数
 >当返回类型与响应模型不一致时，使用装饰器的 response_model 参数：
+
 ```python
 from fastapi import FastAPI
 from pydantic import BaseModel, EmailStr
 
 app = FastAPI()
 
-# 输入模型（包含密码）
+#输入模型（包含密码）
 class UserIn(BaseModel):
     username: str
     password: str
     email: EmailStr
 
-# 输出模型（不包含密码）
+#输出模型（不包含密码）
 class UserOut(BaseModel):
     username: str
     email: EmailStr
 
-# 函数接收 UserIn，但响应使用 UserOut
+#函数接收 UserIn，但响应使用 UserOut
 @app.post("/users/", response_model=UserOut)
 async def create_user(user: UserIn):
     # 返回的 user 包含密码，但 response_model=UserOut 会过滤掉密码

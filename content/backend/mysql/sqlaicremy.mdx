@@ -24,10 +24,53 @@ SQLAlchemy是Python中最受欢迎和功能强大的ORM（对象关系映射）�
 
 ## create_engine(url, **kwargs)
 
-**作用**：创建数据库引擎，管理连接池，是整个应用入口SQLAlchemy
+>**作用**：创建数据库引擎，管理连接池，是整个应用入口SQLAlchemy
 
 ```python
 engine = create_engine("mysql+pymysql://root:123456@localhost:3306/test_db", echo=False)
 ```
+
 - `url`格式：`数据库+driver://user:password@host:port/dbname`
 - `echo=True`：打印原生 SQL，调试用，生产关闭
+
+## sessionmaker
+>**作用**：生成会话工厂，会话 `Session` 是和数据库交互的载体
+
+```python
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+```
+
+- `autocommit=False`：必须手动 commit
+- `autoflush=False`：查询前不会自动刷新
+
+## declarative_base
+>**作用**：ORM 模型基类，所有表模型继承它
+
+```python
+#是旧版（1.x 及更早）的写法
+Base = declarative_base()
+
+#是 SQLAlchemy 2.0 引入的现代标准写法
+class Base(DeclarativeBase):
+    pass
+```
+
+```Base.metadata.create_all(bind=engine)```
+
+>作用：根据模型自动建表；**只建不存在的表，不会更新表结构**
+
+## session（db 会话）核心方法
+- `db.add(obj)`：添加单个对象到会话
+- `db.add_all([obj1,obj2])`：批量添加
+- `db.commit()`：提交事务，持久化到数据库
+- `db.delete(obj)`：标记对象为删除
+- `db.execute(stmt)`：执行语句（update/delete/select）
+- `db.scalar(stmt)`：查询**单条第一条结果**，适合查单个对象、count
+- `db.scalars(stmt)`：查询**多行结果**，返回标量对象列表（ORM 模型对象）
+- `db.rollback()`：回滚（出错时用）
+- `db.close()`：关闭会话
+
+>区分重点：
+>- `scalar()` → 单个值 / 单条对象
+>- `scalars()` → 多个模型对象
+>- `execute()` → 原始行对象（多表 join 查部分字段时用 `.all()`）
