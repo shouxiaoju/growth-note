@@ -92,3 +92,29 @@ if chat_url is not None:
         print(json.dumps(res.text))
 
 ```
+
+# 列表去重并保持顺序
+
+**方案1**
+
+```python
+lst = [3, 1, 2, 3, 1, 4]
+result = list(dict.fromkeys(lst))
+print(result)   # [3, 1, 2, 4]
+```
+>原理：dict.fromkeys(lst) 以列表元素为 key 建 dict，dict 的 key 天然唯一且保持首次插入顺序，再转回 list。
+
+**方案2**
+
+```python
+def dedup(lst):
+    seen = set()
+    result = []
+    for x in lst:
+        if x not in seen:
+            seen.add(x)
+            result.append(x)
+    return result
+
+print(dedup([3, 1, 2, 3, 1, 4]))   # [3, 1, 2, 4]
+```

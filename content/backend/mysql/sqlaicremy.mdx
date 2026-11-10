@@ -1,0 +1,33 @@
+---
+title: ORM 框架SQLAlchemy
+description: SQLAlchemy是Python中最受欢迎和功能强大的ORM（对象关系映射）框架之一。它提供了丰富的功能和灵活的API，使得在Python中进行数据库操作变得简单和高效。
+date: 2026-10-12
+tags: [python, mysql]
+category: backend/mysql
+order: 2
+---
+
+# SQLAlchemy简介
+SQLAlchemy是Python中最受欢迎和功能强大的ORM（对象关系映射）框架之一。它提供了丰富的功能和灵活的API，使得在Python中进行数据库操作变得简单和高效。
+
+主要特点：
+1. 对象关系映射：SQLAlchemy允许你通过定义Python类来映射数据库表，实现对象和关系之间的转换。
+2. 强大的查询语言：SQLAlchemy提供了强大且灵活的查询语言，支持复杂的过滤、排序、聚合等操作。
+3. 事务支持：SQLAlchemy提供了事务管理机制，可以保证数据库操作的原子性和一致性。
+4. 支持多种数据库后端：SQLAlchemy可以与多种数据库后端（如MySQL、PostgreSQL、SQLite、Oracle等）无缝集成。
+
+# 基础核心 API（连接、模型、会话）
+
+## 安装
+
+```pip install sqlalchemy```
+
+## create_engine(url, **kwargs)
+
+**作用**：创建数据库引擎，管理连接池，是整个应用入口SQLAlchemy
+
+```python
+engine = create_engine("mysql+pymysql://root:123456@localhost:3306/test_db", echo=False)
+```
+- `url`格式：`数据库+driver://user:password@host:port/dbname`
+- `echo=True`：打印原生 SQL，调试用，生产关闭

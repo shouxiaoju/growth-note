@@ -1,0 +1,436 @@
+---
+title: FastApi
+description: FastAPI 是一个用于构建 API 的现代、快速（高性能）的 Python Web 框架，专为构建 RESTful API 而设计。
+date: 2026-10-12
+tags: [python, JavaScript]
+category: backend/python
+order: 5
+---
+
+# 安装
+```text
+pip install fastapi
+
+# FastAPI 是一个 ASGI 框架，需要一个 ASGI 服务器来运行。最常用的是 Uvicorn：
+
+pip install "uvicorn[standard]"
+```
+
+## 创建一个简单应用
+```python
+# 引入fastapi
+from fastapi import FastAPI
+
+# 创建 FastAPI 应用实例
+app = FastAPI()
+
+# 定义根路径的路由（基础路由）
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+```
+在命令行中启动应用：
+
+`uvicorn main:app --reload`
+
+- main:app	main 指文件名 main.py，app 指文件中创建的 FastAPI 实例变量名
+- --reload	开发模式，代码修改后自动重载服务器（仅用于开发环境）
+
+启动成功后访问终端中的地址，默认：http://127.0.0.1:8000 就可以看到 JSON响应
+
+同时，FastAPI 自动生成了交互式 API 文档：
+
+|地址	|文档类型|	说明
+|:--------|:--------|:--------|
+|http://127.0.0.1:8000/docs|	Swagger UI|	可交互测试 API 的文档界面
+|http://127.0.0.1:8000/redoc|	ReDoc|	更注重阅读体验的文档界面
+
+FastAPI 新版本提供了 fastapi 命令行工具，可以更方便地运行应用。
+
+fastapi dev 会自动查找项目中的 FastAPI 应用并启动开发服务器，等同于 uvicorn main:app --reload。
+
+```text
+# 开发模式（自动重载）
+fastapi dev
+
+# 生产模式
+fastapi run
+```
+# 练习
+
+>对于大型项目，推荐以下结构：
+
+```text
+my_fastapi_project/
+├── app/
+│   ├── __init__.py
+│   ├── main.py         # 应用入口
+│   ├── api/            # API路由
+│   │   ├── __init__.py
+│   │   ├── progect.py
+│   │   └── router_group.py
+│   ├── models/         # 数据模型
+│   │   ├── __init__.py
+│   │   └── user.py
+│   ├── schemas/        # Pydantic模型
+│   │   ├── __init__.py
+│   │   └── user.py
+│   └── db/             # 数据库相关
+│       ├── __init__.py
+│       └── session.py
+├── tests/              # 测试代码
+│   ├── __init__.py
+│   └── test_api.py
+├── requirements.txt    # 依赖列表
+└── .env                # 环境变量
+```
+
+## 路由分组
+
+**main.py**
+
+```python
+#app/main.py
+import uvicorn
+from fastapi import FastAPI
+from api import router_group.router
+
+#创建 FastAPI 应用实例
+app = FastAPI()
+
+#注册路由
+app.include_router(router_group.router)
+
+#启动项
+if __name__ == '__main__':
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+
+```
+
+**router_group.py**
+
+```python
+#路由分组练习
+from fastapi import APIRouter
+
+#创建路由分组
+router = APIRouter(prefix="/rout", tags=["rout"])
+'''
+prefix="/rout"	路径前缀，该 router 下所有路由都会自动加上 /rout
+tags=["rout"]	标签，用于在 /docs 自动文档中把这些接口归到 "rout" 分组下
+'''
+
+@router.get("/list")
+async def getList():
+    return {"Hello World"}
+
+#请求http://127.0.0.1:8000/rout/list
+#返回 Hello World
+```
+
+## 请求参数
+
+```python
+#需在main.py中注册路由
+
+#app/api/progect.py
+#请求参数练习
+
+from fastapi import FastAPI, APIRouter
+from pydantic import BaseModel
+
+#创建路由分组
+router = APIRouter(prefix='/learn',tags=['user'])
+
+#定义路由
+
+#路径参数
+@router.get('/item1/{id}')
+async def getList(id:int):
+    return {'id':id}
+'''
+在 URL 路径中用 {} 声明参数，函数参数名需与之一致.
+带类型的路径参数会自动做数据校验和转换。比如 item_id: int，如果传入非整数，FastAPI 会返回 422 错误.
+'''
+
+# 查询参数
+@router.get('/item2')
+async def getList(id:int,name:str):
+    return {'id':id,'name':name}
+'''
+函数中不属于路径参数的参数，会自动被识别为查询参数
+访问 /item2/?id=5&name="张三" 即可传参
+'''
+
+#请求体
+class Item(BaseModel):
+    id: int
+    name: str
+
+@router.post('/item3')
+async def setList(params:Item):
+    return {'id':params.id,'name':params.name}
+
+```
+
+## pydantic
+>Pydantic 是 FastAPI 的核心依赖，用于数据校验和序列化，是一个 Python 数据校验库，它的核心思想是：用 Python 类型注解定义数据结构，Pydantic 自动负责校验和转换
+```python
+#Pydantic 练习
+
+from fastapi import APIRouter
+from pydantic import BaseModel, Field
+
+router=APIRouter(prefix='/pydantic',tags=['pydantic'])
+
+#定义pydantic模型(基础模型)
+class Item1(BaseModel):
+    id:int # 必填
+    name:str # 必填
+    description:str | None=None # 可选
+
+#作为请求体使用
+@router.post('/item1')
+async def item1(item: Item1):
+    #FastAPI 自动校验请求体，校验通过后赋值给 item 参数
+    return {"item":item}
+
+#字段约束
+#Pydantic 提供了 Field 来添加约束和元数据
+class Item2(BaseModel):
+    name:str = Field(min_length=1, max_length=50)
+    age:int = Field(gt=0)
+    description: str | None = None  # 可选
+
+@router.post('/item2')
+async def item1(item: Item2):
+    #FastAPI 自动校验请求体，校验通过后赋值给 item 参数
+    return {"item":item}
+'''
+http://127.0.0.1:8000/pydantic/item2
+d'{
+  "name": "张三",
+  "age": -1,
+  "description": "string"
+}'
+Response body
+{
+  "detail": [
+    {
+      "type": "greater_than",
+      "loc": [
+        "body",
+        "age"
+      ],
+      "msg": "Input should be greater than 0",
+      "input": -1,
+      "ctx": {
+        "gt": 0
+      }
+    }
+  ]
+}
+'''
+#在 FastAPI 中的用法
+
+#作为请求体
+@router.post("/items3")
+def create_item(item: Item1):
+    return item
+#FastAPI 会自动：解析 JSON → 校验 → 转换为 Item 对象 → 校验失败返回 422。
+
+#作为响应模型
+@router.get("/item4", response_model=Item2)
+async def create_item():
+    return {"name": "苹果", "age": 3,'description':"测试", "secret": "不该返回"}
+
+'''
+Response body
+Download
+{
+  "name": "苹果",
+  "age": 3,
+  "description": "测试"
+}
+'''
+```
+
+## 依赖注入
+
+>把复用逻辑抽成可调用对象，FastAPI 自动帮你执行、把返回值注入参数，不用手动调用
+
+依赖就是一个函数，它可以使用与路径操作函数相同的参数（查询参数、路径参数、请求体等），FastAPI 会在执行路由函数之前自动调用依赖函数，并将其返回值传递给路由函数。
+
+```python
+from typing import Annotated
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+# 1. 定义依赖函数
+def common_parameters(q: str | None = None, skip: int = 0):
+    return {"name": name, "age": age}
+
+
+# 2. 在路由中使用依赖
+@app.get("/items")
+async def read_items(commons: dict = Depends(common_parameters)):
+    # commons 接收依赖函数的返回值
+    return commons
+```
+
+**依赖的执行流程** 
+
+当请求到达时，FastAPI 的处理顺序：
+- 识别路由函数及其依赖
+- 执行依赖函数（按依赖顺序）
+- 将依赖函数的返回值传递给路由函数
+- 执行路由函数
+
+### 类作为依赖
+>除了函数，你也可以使用类作为依赖：
+```python
+from typing import Annotated
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+# 用类声明依赖
+class CommonQueryParams:
+    def __init__(self, q: str | None = None, skip: int = 0, limit: int = 100):
+        self.q = q
+        self.skip = skip
+        self.limit = limit
+
+
+# 使用类作为依赖
+@app.get("/items/")
+async def read_items(commons: Annotated[CommonQueryParams, Depends()]):
+    return {"q": commons.q, "skip": commons.skip, "limit": commons.limit}
+```
+>当 Depends() 不传入参数时，FastAPI 会自动使用参数的类型注解（CommonQueryParams）作为依赖。
+
+### 子依赖
+>依赖可以有自己的依赖，形成依赖链：
+```python
+from typing import Annotated
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+# 依赖函数
+def query_extractor(q: str | None = None):
+    return q
+
+# 子依赖：依赖 query_extractor
+def query_checker(q: str = Depends(query_extractor)):
+    if q == "admin":
+        # 子依赖可以进行校验
+        return q + " (checked)"
+    return q
+
+
+# 路由使用子依赖
+@app.get("/items/")
+async def read_items(q: str = Depends(query_checker)):
+    return {"q": q}
+```
+>执行流程：query_extractor -> query_checker -> 路由函数
+
+### 在装饰器中使用依赖
+>有时你只需要依赖的副作用（如权限校验），不需要其返回值。可以在装饰器的 dependencies 参数中声明：
+
+```python
+from fastapi import Depends, FastAPI, Header, HTTPException
+
+app = FastAPI()
+
+# 依赖：校验 API Key
+async def verify_api_key(x_api_key: str = Header()):
+    if x_api_key != "secret-key":
+        raise HTTPException(status_code=400, detail="X-API-Key invalid")
+
+# 在装饰器中使用依赖，不需要返回值
+@app.get("/items/", dependencies=[Depends(verify_api_key)])
+async def read_items():
+    return [{"item": "Foo"}]
+
+# 对整个路由组使用依赖
+@app.get("/users/", dependencies=[Depends(verify_api_key)])
+async def read_users():
+    return [{"user": "Bar"}]
+```
+
+### 使用 yield 的依赖
+>当依赖需要执行清理操作（如关闭数据库连接）时，使用 yield：
+```python
+from typing import Annotated
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+# 使用 yield 的依赖：请求前创建连接，请求后关闭连接
+def get_db():
+    db = "database_connection"  # 模拟创建数据库连接
+    try:
+        yield db  # 请求处理期间提供数据库连接
+    finally:
+        print("关闭数据库连接")  # 请求完成后清理资源
+
+@app.get("/items/")
+async def read_items(db: str = Depends(get_db)):
+    return {"db": db}
+```
+
+## FastAPI 响应模型
+>响应模型用于声明 API 返回的数据结构。通过声明响应模型，FastAPI 会自动完成输出数据的校验、序列化和过滤，确保客户端只接收到预期的数据。
+### 使用返回类型注解
+最简单的方式是直接注解路径操作函数的返回类型：
+
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+
+@app.get("/items/{item_id}", response_model=Item)
+async def read_item(item_id: int):
+    # 返回的数据会自动按照 Item 模型过滤和校验
+    return {
+        "name": "Foo",
+        "description": "A very nice Item",
+        "price": 22.2,
+        "secret": "this should not be visible",  # 不在 Item 中的字段会被过滤
+    }
+```
+
+### response_model 参数
+>当返回类型与响应模型不一致时，使用装饰器的 response_model 参数：
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel, EmailStr
+
+app = FastAPI()
+
+# 输入模型（包含密码）
+class UserIn(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+
+# 输出模型（不包含密码）
+class UserOut(BaseModel):
+    username: str
+    email: EmailStr
+
+# 函数接收 UserIn，但响应使用 UserOut
+@app.post("/users/", response_model=UserOut)
+async def create_user(user: UserIn):
+    # 返回的 user 包含密码，但 response_model=UserOut 会过滤掉密码
+    return user
+```

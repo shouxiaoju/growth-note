@@ -266,6 +266,12 @@ SELECT * FROM users ORDER BY birthdate DESC;
 
 -- 添加 LIMIT 子句，限制返回的行数
 SELECT * FROM users LIMIT 10;
+-- 语法：`LIMIT offset, size`
+-- offset：偏移量 = (页码 - 1)* 每页条数
+-- ize：每页多少条
+
+-- 总数
+select count(*) as '总数' from users;
 
 -- 使用 AND 运算符和通配符
 SELECT * FROM users WHERE username LIKE 'j%' AND is_active = TRUE;
@@ -507,6 +513,9 @@ GROUP BY student_name                -- ③ 分组
 HAVING   SUM(score) > 250            -- ④ 分组后过滤
 ORDER BY SUM(score) DESC;            -- ⑥ 排序
 ```
+>注意：
+- `select` 后面非聚合字段，必须出现在 `GROUP BY` 里（only_full_group_by 模式，新版 MySQL 默认开启）
+- 分组之后过滤条件用 `HAVING`，不能用 WHERE；WHERE 是分组前过滤
 
 ## 子查询
 子查询 = 写在括号里的一条 SELECT 语句，它先执行，把结果交给外层查询用。
@@ -685,3 +694,280 @@ MySQL 索引是一种数据结构，用于加快数据库查询的速度和性�
 - 增删改数据时要同步维护索引，降低写入速度
 
 所以索引不是越多越好，而是为高频、高选择性的查询条件建立。
+
+## 索引分类
+### 主键索引 PRIMARY KEY
+> 唯一、非空，一张表只能一个、聚簇索引
+
+```SQL
+CREATE TABLE orders (
+  id INT PRIMARY KEY AUTO_INCREMENT
+);
+```
+
+### 唯一索引 UNIQUE
+>索引字段的值不能重复，可以为 NULL（允许多个 null）
+
+```SQL
+-- 建表时
+order_no VARCHAR(32) NOT NULL UNIQUE
+-- 单独创建
+CREATE UNIQUE INDEX uk_orders_order_no ON orders(order_no);
+```
+
+### 普通索引 INDEX（最常用）
+>只加速查询，不限制唯一
+
+```SQL
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+```
+
+### 联合索引（复合索引）
+>多个字段一起建索引，**最左前缀原则**
+
+```SQL
+CREATE INDEX idx_user_status_amount ON orders(user_id, status, amount);
+```
+> 注意：联合索引的最左原则，`where status=?`、`where amount=?`、`where status=? and amount=?`都不会生效。
+
+## 索引创建、查看、删除语句
+```SQL
+-- 创建普通索引
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+
+-- 创建联合索引
+CREATE INDEX idx_orders_user_status ON orders(user_id, status);
+
+-- 查看表索引
+SHOW INDEX FROM orders;
+
+-- 删除索引
+DROP INDEX idx_orders_user_id ON orders;
+```
+
+## 验证索引有没有生效：EXPLAIN
+```SQL
+EXPLAIN SELECT * FROM orders WHERE user_id = 1;
+```
+重点看字段：
+
+1. `type`：访问类型（优先级从好到坏）
+`system > const > eq_ref > ref > range > index > ALL`
+`ALL` = 全表扫描，没用到索引，需要优化
+2. `key`：实际使用到的索引名，NULL = 没走索引
+3. `rows`：预估扫描行数，越小越好
+4. `Extra`：
+    - `Using index`：覆盖索引 ✅
+    - `Using where`：拿到索引后还要过滤
+    - `Using temporary`：用到临时表（group by 常见，性能差）
+    - `Using filesort`：文件排序，order by 没走索引，性能差
+
+## 索引失效场景
+基于索引 `idx(user_id, status, amount)`
+1. **like 以 % 开头** `where username like '%张三'` → 索引失效；`like '张三%'` 可以走
+2. **索引列参与运算 / 函数**
+```SQL
+-- ❌ 失效
+WHERE user_id + 1 = 1
+WHERE DATE(create_time) = '2026-11-10'
+-- ✅ 改写成：
+WHERE create_time >= '2026-11-10 00:00:00' AND create_time < '2026-11-11 00:00:00'
+```
+3. **隐式类型转换**（坑最多！）
+`order_no` 是字符串，你传数字：`WHERE order_no = 123` → 字段被转成数字，索引失效
+4. **or 两边有一个字段没有索引**，整个索引失效
+补救：or 两边字段都单独建索引
+5. **联合索引违反最左前缀**
+6. **范围条件（> < between）后面的字段索引失**
+7. `where user_id=1 and status>0 and amount=99` → amount 不走索引
+8. 优化器判断：索引还不如全表快（比如符合条件数据占表超过 20%~30%，mysql 放弃索引）
+
+# SQL练习
+```SQL
+-- 电商订单简易系统
+
+-- 创建数据库
+create database if not exists db_dianshang char set 'utf8mb4';
+
+-- 选择创建的数据库
+use db_dianshang;
+
+-- 创建用户表
+create table user(
+	id int primary key auto_increment comment '用户主键', 
+    username varchar(50) not null comment '用户名字',
+    phone varchar(11) not null comment '手机号',
+    age tinyint comment '年龄', 
+    create_time datetime default current_timestamp comment '创建时间'
+) engine=InnoDB default charset=utf8mb4 comment '用户表';
+-- comment 是注释
+-- init 大整数
+-- tinyint 小整数
+-- engine=InnoDB使用 InnoDB 存储引擎（支持事务、行级锁、外键）
+-- default charset=utf8mb4 默认字符集为 utf8mb4，支持完整的 Unicode（含 emoji、生僻字）
+
+-- 创建订单表
+create table order_info(
+	id int primary key auto_increment comment '订单主键',
+    order_no varchar(32) not null comment '订单编号',
+    user_id int not null comment '用户id',
+    amount decimal(10,2) not null comment '订单金额', 
+    status tinyint default 1 comment '订单状态 1待支付 2已支付 3已取消',
+    create_time datetime default current_timestamp comment '下单时间',
+    -- 外键
+    foreign key(user_id) references user(id)
+)engine=InnoDB default charset=utf8mb4 comment '订单表';
+-- decimal(10,2) 总位数 10 位，其中小数 2 位
+-- foreign key (user_id) 在当前表上声明一个外键，作用在 user_id 列
+-- references user(id) 引用 user 表的 id 列（被引用列必须是主键或唯一键）
+
+-- 新增用户
+INSERT INTO `user`(username, phone, age) VALUES
+('张三','13800138001',22),
+('李四','13800138002',25),
+('王五','13800138003',30),
+('赵六','13800138004',28);
+
+-- 新增订单
+INSERT INTO order_info(order_no,user_id,amount,status) VALUES
+('ORD20261107001',1,99.00,2),
+('ORD20261107002',1,199.00,1),
+('ORD20261107003',2,299.00,2),
+('ORD20261107004',3,59.00,3),
+('ORD20261107005',3,399.00,2),
+('ORD20261107006',3,129.00,1);
+
+-- 基础查询
+
+-- 查询全部用户
+select * from user;
+
+-- 查询全部订单
+select *from order_info;
+
+-- 条件查询：年龄大于24的用户
+select *from user where age>24;
+select id, username as '名字', age as '年龄' from user where age>24;
+
+-- 查询已支付的订单
+select * from order_info where status = 2;
+
+-- 修改id=1用户的年龄
+update user set age = 23 where id=1;
+
+-- 修改订单状态：把订单号 ORD20261107002 修改为已支付(2)
+UPDATE order_info SET status=2 WHERE order_no='ORD20261107002';
+
+-- 排序 升序 asc, 降序 desc 
+select *from user order by age desc;
+
+-- 分页查询
+select *from user limit 0, 2;
+-- 语法：`LIMIT offset, size`
+-- offset：偏移量 = (页码 - 1)* 每页条数
+-- ize：每页多少条
+
+-- 总数
+select count(*) as '总数' from user;
+
+-- 多表联查
+
+-- INNER JOIN 内连接：只查出两边匹配上的数据（有订单的用户）
+select
+u.id user_id,
+u.username user_name,
+o.id order_id,
+o.order_no,
+o.amount,
+o.status
+from user u
+inner join order_info o on u.id = o.user_id;
+
+-- LEFT JOIN 左连接：左边表全部保留，右边没有匹配则为 NULL（重点！）
+SELECT
+  u.id user_id,
+  u.username,
+  o.order_no,
+  o.amount
+FROM `user` u
+LEFT JOIN order_info o ON u.id = o.user_id;
+
+-- 索引
+-- WHERE 条件、JOIN 关联字段、ORDER BY、GROUP BY 的字段适合建索引；主键自带主键索引。
+
+-- 创建单列索引
+create index idx_order_userid ON order_info(user_id);
+
+-- 订单号经常按 order_no 精确查找，建索引
+create index idx_order_no on order_info(order_no);
+
+-- 联合索引：经常 status + create_time 一起筛选排序
+create index idx_status_createtime on order_info(status, create_time);
+
+-- 查看索引 
+show index from order_info;
+
+-- 验证索引是否生效：EXPLAIN
+EXPLAIN
+SELECT * FROM order_info WHERE user_id=1;
+-- `type`：ref/range 比较好；ALL 代表全表扫描（没走索引）
+-- `key`：显示用到的索引名字，代表索引生效
+
+-- 分组统计：每个用户有多少订单
+SELECT user_id, COUNT(*) AS order_count, SUM(amount) AS sum_amount
+FROM order_info
+GROUP BY user_id;
+
+-- 分组 + having 过滤聚合结果（having 是过滤分组后，where是分组前）
+SELECT user_id, COUNT(*) AS order_count
+FROM order_info
+GROUP BY user_id
+HAVING COUNT(*) >=2;
+
+-- 模糊查询 
+INSERT INTO `user`(username, phone, age) VALUES
+('张飞','13800138005',18 );
+-- 1. 查询用户名【以张开头】：张%
+select *from user where username like '张%';
+
+-- 2. 查询用户名【以三结尾】：%三
+SELECT * FROM `user` WHERE username LIKE '%三';
+INSERT INTO `user`(username, phone, age) VALUES
+('张小飞','13800138005',18 );
+
+-- 3. 查询用户名【包含“小”字】，最常用模糊搜索
+SELECT * FROM `user` WHERE username LIKE '%小%';
+
+-- 名字第三个字是华：__飞
+SELECT * FROM `user` WHERE username LIKE '__飞';
+
+-- 分组 group by
+-- GROUP BY 按照指定字段分组，相同值的合并成一组，通常配合聚合函数使用：COUNT、SUM、MAX、MIN、AVG
+-- 1. `select` 后面非聚合字段，必须出现在 GROUP BY 里（only_full_group_by 模式，新版 MySQL 默认开启）
+-- 2. 分组之后过滤条件用 `HAVING`，不能用 WHERE；WHERE 是分组前过滤
+
+select
+  user_id,
+  count(*) as order_count,
+  sum(amount) as total_money,
+  avg(amount) as avg_money,
+  max(amount) as max_money
+from order_info
+group by user_id;
+
+select
+  u.id,
+  u.username,
+  count(o.id) as order_num,
+  sum(o.amount) as sum_amount
+from `user` u
+left join order_info o on u.id = o.user_id
+group by u.id, u.username
+having sum(o.amount) > 200;
+
+-- 注意：only_full_group_by MySQL5.7+ 默认开启，select 里不能随便写不在 group by 里、又不是聚合的字段
+-- `COUNT(*)` vs `COUNT(字段)`
+-- COUNT (*)：统计分组行数，不管字段是不是 null
+-- COUNT (user_id)：统计 user_id 不为 NULL 的数量，left join 场景差别很大
+```
+
