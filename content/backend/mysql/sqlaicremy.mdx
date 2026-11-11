@@ -16,7 +16,8 @@ SQLAlchemy是Python中最受欢迎和功能强大的ORM（对象关系映射）�
 3. 事务支持：SQLAlchemy提供了事务管理机制，可以保证数据库操作的原子性和一致性。
 4. 支持多种数据库后端：SQLAlchemy可以与多种数据库后端（如MySQL、PostgreSQL、SQLite、Oracle等）无缝集成。
 
-# 基础核心 API（连接、模型、会话）
+# 基础核心 API
+>连接、模型、会话
 
 ## 安装
 
@@ -74,3 +75,509 @@ class Base(DeclarativeBase):
 >- `scalar()` → 单个值 / 单条对象
 >- `scalars()` → 多个模型对象
 >- `execute()` → 原始行对象（多表 join 查部分字段时用 `.all()`）
+
+## 模型定义
+### Column
+> 定义字段
+`Cloumn(类型, primary_key, autoincrement, nullable, comment, ForeignKey)`
+
+- 类型：定义字段的类型有：
+    - Integer：整数类型。对应数据库中的 INTEGER，在 Python 中映射为 int
+    - String(length)：变长字符串。对应数据库中的 VARCHAR。通常需要指定长度，例如 String(50)，因为在多数数据库的 CREATE TABLE 语句中 VARCHAR 要求指定长度。
+    - Text：长文本。对应数据库中的 TEXT 或 CLOB，通常不需要指定长度，适合存储大段文字。
+    - Float：浮点数。用于存储带小数的数值。
+    - Boolean：布尔值。对应 True / False。
+    - DateTime：日期和时间。在 Python 中对应 datetime.datetime 对象。
+    - Date：日期 datetime.date
+    - Time：时间 datetime.time
+- primary_key：主键。
+- autoincrement：控制主键列是否由数据库自动生成值。
+- nullable：用于控制该列是否允许存储 NULL 值的布尔参数。
+- comment：注释
+- ForeignKey：用于在 SQLAlchemy 模型中声明外键约束，这一列的值必须来自另一张表（或本表）的某个主键/唯一列，它是数据库层面保证引用完整性的机制，也是 relationship() 能工作的基础。
+
+**ForeignKey**基本用法
+
+```python
+from sqlalchemy import Column, Integer, String, ForeignKey
+
+class Department(Base):
+    __tablename__ = "departments"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50))
+
+class Employee(Base):
+    __tablename__ = "employees"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50))
+    dept_id = Column(Integer, ForeignKey("departments.id"))  # 外键指向 departments.id
+```
+>ForeignKey("departments.id") 的参数是一个字符串，格式为 "表名.列名"。这里 dept_id 的值必须是 departments表中已存在的 id值（或为 NULL，因为默认 nullable=True）。
+
+**relationship**
+
+>relationship() 是用于在 ORM 层面定义两个数据表（或模型类）之间关联关系的核心工具。它让你能通过 Python 对象的属性直接访问关联数据，而无需手动编写 SQL 的 JOIN 语句。
+
+**场景设定**
+
+假设我们有两个模型：Department（部门） 和 Employee（员工）。一个部门可以有多个员工，一个员工只属于一个部门。
+
+数据库层面的表结构是这样的：
+
+```text
+departments 表
++----+----------+
+| id | name     |
++----+----------+
+| 1  | 技术部   |
+| 2  | 市场部   |
++----+----------+
+
+employees 表
++----+-------+--------+---------+
+| id | name  | salary | dept_id |
++----+-------+--------+---------+
+| 1  | 张三  | 10000  | 1       |
+| 2  | 李四  | 12000  | 1       |
+| 3  | 王五  | 9000   | 2       |
++----+-------+--------+---------+
+```
+注意 employees 表里有一个 dept_id 外键，指向 departments.id。
+
+如果没有 relationship()，你想查"技术部的所有员工"，需要手动写 SQL 或分两步查：
+
+```python
+#第一步：查到技术部的 id
+dept = session.query(Department).filter_by(name="技术部").first()
+#dept.id == 1
+
+#第二步：用这个 id 去 employees 表里查
+employees = session.query(Employee).filter_by(dept_id=dept.id).all()
+#得到 [张三, 李四]
+
+#反过来，你想知道"张三属于哪个部门"，也要手动用 dept_id 去查：
+zhangsan = session.query(Employee).filter_by(name="张三").first()
+dept = session.query(Department).filter_by(id=zhangsan.dept_id).first()
+```
+有了 relationship 之后
+
+```python
+class Department(Base):
+    __tablename__ = "departments"
+    id = mapped_column(Integer, primary_key=True)
+    name = mapped_column(String(50))
+
+    # 一个部门有多个员工
+    employees = relationship("Employee", back_populates="dept")
+
+
+class Employee(Base):
+    __tablename__ = "employees"
+    id = mapped_column(Integer, primary_key=True)
+    name = mapped_column(String(50))
+    salary = mapped_column(Integer)
+    dept_id = mapped_column(ForeignKey("departments.id"))
+
+    # 一个员工属于一个部门
+    dept = relationship("Department", back_populates="employees")
+```
+现在，relationship() 让你可以直接用属性访问关联对象，就像访问普通 Python 属性一样：
+
+```python
+#查技术部的所有员工 —— 直接访问 .employees 属性
+dept = session.query(Department).filter_by(name="技术部").first()
+print(dept.employees)   # [张三, 李四]  ← SQLAlchemy 自动帮你查了 employees 表
+
+#查张三属于哪个部门 —— 直接访问 .dept 属性
+zhangsan = session.query(Employee).filter_by(name="张三").first()
+print(zhangsan.dept.name)   # 技术部  ← SQLAlchemy 自动帮你查了 departments 表
+```
+**back_populates 的作用：双向同步**]
+
+>back_populates 让两个方向的关联在内存中自动同步.
+
+### Index
+>创建索引，放在 `__table_args__`
+```python
+Index("idx_name", "name")          # 单列索引
+Index("idx_a_b", "age", "salary")  # 联合索引（遵守最左前缀）
+```
+## 查询
+### select
+```python
+stmt = select(模型/字段列表)
+```
+### where () 条件过滤
+```python
+stmt = select(Employee).where(Employee.salary > 10000)
+```
+**多条件：**
+
+1. 方式一：直接传多个条件（隐式 AND）:
+```python
+from sqlalchemy import select
+
+#查询 name 为 "张三" 且 salary 大于 10000 的员工
+stmt = select(Employee).where(
+    Employee.name == "张三",
+    Employee.salary > 10000
+)
+```
+2. 使用 and_() / or_() 显式组合:
+    - `and_(条件1,条件2)` 同时满足
+    - `or_(条件1,条件2)` 满足其一
+```python
+from sqlalchemy import and_, or_
+#AND：部门为技术部 且 (薪资大于10000 或 职位是经理)
+stmt = select(Employee).where(
+    and_(
+        Employee.dept_id == 1,
+        or_(Employee.salary > 10000, Employee.title == "经理")
+    )
+)
+```
+
+**比较运算**
+
+|算子|	写法示例|	对应 SQL
+|:------|:------|:------|
+|等于|	Employee.name == "张三"|	= '张三'
+|不等于|	Employee.salary != 10000|	!= 10000
+|大于 / 小于|	Employee.salary > 10000| > 10000
+|大于等于 / 小于等于|	Employee.salary >= 5000|	>= 5000
+|区间|	Employee.salary.between(5000, 10000)|	BETWEEN 5000 AND 10000
+
+>between() 是闭区间，包含边界值
+
+**字符串匹配**
+
+|算子|	说明|	示例
+|:------|:------|:------|
+|like()|	区分大小写的模糊匹配|	Employee.name.like("张%")
+|ilike()|	不区分大小写的模糊匹配|	Employee.name.ilike("%zhang%")
+|contains()|	包含子串（自动加 %...%）|	Employee.name.contains("三")
+|startswith()|	以某子串开头|	Employee.name.startswith("张")
+|endswith()|	以某子串结尾|	Employee.name.endswith("三")
+
+>contains()、startswith()、endswith() 本质上也是生成 LIKE 表达式，只是帮你自动拼接了通配符，写起来更直观。
+
+**集合判断**
+
+>in_() / not_in()：判断列值是否在给定列表中。
+
+```python
+select(Employee).where(Employee.dept_id.in_([1, 2, 3]))
+select(Employee).where(Employee.role.not_in(["banned", "suspended"]))
+```
+>传入空列表 in_([]) 时，SQLAlchemy 会生成一个永远为假的条件，不会报错，查询结果为空，行为是安全的。
+
+**空值判断**
+>判断 NULL 不能用 == None，要用 is_() 和 is_not()：
+```python
+select(Employee).where(Employee.deleted_at.is_(None))      # IS NULL
+select(Employee).where(Employee.verified_at.is_not(None))  # IS NOT NULL
+```
+
+### order_by () 排序
+```python
+stmt = select(Employee).order_by(Employee.salary.desc())
+```
+- `.asc()` 升序（默认，可以省略）
+- `.desc()` 降序
+- 支持多字段：`order_by(Employee.age.asc(), Employee.salary.desc())`
+
+### offset () + limit () 分页
+```python
+offset = (page -1)*page_size
+stmt = select(Employee).offset(offset).limit(page_size)
+```
+- `limit(n)`：最多取 n 条
+- `offset(n)`：跳过前面 n 条
+> 缺点：大 offset 性能差；大数据量建议主键游标分页
+
+### func.count () 统计总数
+```python
+count_stmt = select(func.count(Employee.id))
+total = db.scalar(count_stmt)
+```
+>`func.xxx` 可以调用数据库原生函数：count、sum、max 等
+
+### join () 联表查询（SQL join）
+```python
+#inner join
+stmt = select(...).join(Department, Employee.dept_id == Department.id)
+#left join
+stmt = select(...).join(Department, isouter=True)
+```
+- `isouter=True` → LEFT JOIN；默认 INNER JOIN
+- 适合只取部分字段、需要原生联表结果
+
+### joinedload () 
+>预加载（解决 N+1）
+```python
+from sqlalchemy.orm import joinedload
+stmt = select(Department).options(joinedload(Department.employees))
+```
+- 作用：一条 SQL join 一次性把主表 + 关联数据查出来
+- 和 `join()` 区别：`joinedload` 是 ORM 关联加载，不是用来过滤；`join` 是 SQL 联表过滤查询
+
+## 新增 Create
+### ORM 对象新增（推荐）
+```python
+obj = Employee(name="xxx")
+db.add(obj)
+db.commit()
+```
+### add_all () 批量新增
+```python
+db.add_all([obj1,obj2])
+db.commit()
+```
+## 修改 Update
+### 先查对象再赋值
+>先查对象再赋值（安全，适合单条，有对象实例）
+```python
+emp = db.scalar(select(Employee).where(Employee.id==1))
+if emp:
+    emp.salary = 13000
+    db.commit()
+```
+### update () 
+>update () 语句批量更新（适合大批量，不加载对象）
+```python
+stmt = update(Employee).where(...).values(salary=14000)
+db.execute(stmt)
+db.commit()
+```
+
+## 删除 Delete
+### 查到对象 `db.delete(obj)`
+```python
+emp = db.scalar(...)
+if emp:
+    db.delete(emp)
+    db.commit()
+```
+### delete () 语句批量删除
+```python
+stmt = delete(Employee).where(Employee.age<22)
+db.execute(stmt)
+db.commit()
+```
+# 快速记忆清单
+|场景|	方法
+|:------|:------|
+|建引擎|	create_engine
+|会话工厂|	sessionmaker
+|模型基类|	declarative_base
+|建表|	Base.metadata.create_all
+|新增|	add / add_all + commit
+|单查|	select + scalar
+|列表查|	select + scalars
+|条件|	where / and_ / or_ / in_ / like
+|排序|	order_by(xxx.asc/desc)
+|分页|	offset + limit
+|统计|	func.count
+|联表 SQL|	join(isouter=True)
+|预加载防 N+1|	options(joinedload)
+|修改|	查对象赋值 /update 语句
+|删除|	db.delete 对象 /delete 语句
+|索引|	Index，写在__table_args__
+
+# 练习
+## 链接数据库+创建会话+定义数据类型
+```python
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Index
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from sqlalchemy import select, update, delete, func
+#数据库连接
+#mysql+pymysql://用户:密码@主机:端口/库名
+DB_URL = "mysql+pymysql://root:123456@127.0.0.1:3306/test_db"
+engine = create_engine(DB_URL, echo=False)  # echo=True 打印原生SQL，调试用
+
+#创建会话
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+#创建模型类
+Base = declarative_base()
+
+#---------------------- 模型定义（带索引、外键关联） ----------------------
+#部门表
+class Department(Base):
+    __tablename__ = "department"
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键")
+    name = Column(String(50), nullable=False, comment="部门名称")
+    address = Column(String(100), comment="部门地址")
+
+    # 一对多：一个部门多个员工
+    employees = relationship("Employee", back_populates="dept")
+
+    # 索引示例：给部门名称建普通索引
+    __table_args__ = (
+        Index("idx_dept_name", "name"),
+    )
+
+#员工表
+class Employee(Base):
+    __tablename__ = "employee"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), nullable=False, comment="员工姓名")
+    age = Column(Integer, comment="年龄")
+    salary = Column(Integer, comment="薪资")
+    dept_id = Column(Integer, ForeignKey("department.id"), nullable=False, comment="所属部门id")
+
+    # 反向关联
+    dept = relationship("Department", back_populates="employees")
+
+    # 联合索引：age + salary
+    __table_args__ = (
+        Index("idx_emp_age_salary", "age", "salary"),
+    )
+
+#创建所有表（首次运行打开）
+#Base.metadata.create_all(bind=engine)
+
+#获取会话
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+db = next(get_db())
+```
+## 新增
+```python
+#新增部门
+dept1 = Department(name="研发部", address="A栋3楼")
+dept2 = Department(name="市场部", address="B栋1楼")
+db.add_all([dept1, dept2])
+db.commit()
+
+#新增员工
+emp1 = Employee(name="张三", age=25, salary=12000, dept_id=1)
+emp2 = Employee(name="李四", age=28, salary=15000, dept_id=1)
+emp3 = Employee(name="王五", age=24, salary=9000, dept_id=2)
+db.add_all([emp1, emp2, emp3])
+db.commit()
+```
+## 查询
+```python
+#查询全部
+stmt = select(Employee)
+res = db.scalars(stmt).all()
+for item in res:
+    print(item.id, item.name)
+
+#条件查询 where
+stmt = select(Employee).where(Employee.salary > 10000)
+res = db.scalars(stmt).all()
+
+#精确查询一条
+stmt = select(Employee).where(Employee.id == 1)
+emp = db.scalar(stmt)
+print(emp.name if emp else "不存在")
+```
+## 排序 order_by
+```python
+#薪资升序
+stmt = select(Employee).order_by(Employee.salary.asc())
+#薪资降序
+stmt = select(Employee).order_by(Employee.salary.desc())
+#多字段排序：年龄升序，薪资降序
+stmt = select(Employee).order_by(Employee.age.asc(), Employee.salary.desc())
+res = db.scalars(stmt).all()
+```
+## 分页 limit + offset
+```python
+page = 1
+page_size = 2
+offset = (page - 1) * page_size
+
+stmt = select(Employee).order_by(Employee.id).offset(offset).limit(page_size)
+data = db.scalars(stmt).all()
+
+#同时查总数（分页常用）
+count_stmt = select(func.count(Employee.id))
+total = db.scalar(count_stmt)
+print(f"总数：{total}，当前页数据：{data}")
+```
+## 修改
+```python
+#方式1：先查再改（安全，ORM推荐）
+emp = db.scalar(select(Employee).where(Employee.id == 1))
+if emp:
+    emp.salary = 13000
+    db.commit()
+
+#方式2：update语句批量更新（适合大批量）
+stmt = update(Employee).where(Employee.dept_id == 1).values(salary=14000)
+db.execute(stmt)
+db.commit()
+```
+## 删除
+```python
+#方式1：查到对象删除
+emp = db.scalar(select(Employee).where(Employee.id == 3))
+if emp:
+    db.delete(emp)
+    db.commit()
+
+#方式2：批量删除
+stmt = delete(Employee).where(Employee.age < 22)
+db.execute(stmt)
+db.commit()
+```
+## 联表查询（join，一对多）
+```python
+#inner join：员工 + 部门信息
+stmt = (
+    select(Employee.id, Employee.name, Employee.salary, Department.name.label("dept_name"))
+    .join(Department, Employee.dept_id == Department.id)
+)
+rows = db.execute(stmt).all()
+for row in rows:
+    print(row.id, row.name, row.salary, row.dept_name)
+
+#左连接 left join（保留左边全部数据）
+stmt = (
+    select(Employee, Department)
+    .join(Department, isouter=True)
+)
+```
+## 关联对象查询
+>relationship 懒加载 / 预加载
+```python
+#查部门，带出下面所有员工（懒加载，访问 .employees 才查库）
+dept = db.scalar(select(Department).where(Department.id == 1))
+print(dept.name, [e.name for e in dept.employees])
+
+#预加载 joinedload 解决 N+1 问题（重点！）
+from sqlalchemy.orm import joinedload
+stmt = select(Department).options(joinedload(Department.employees)).where(Department.id == 1)
+dept = db.scalar(stmt)
+```
+## 常用补充小例子
+```python
+#in 查询
+stmt = select(Employee).where(Employee.id.in_([1,2]))
+#like 模糊查询
+stmt = select(Employee).where(Employee.name.like("%张%"))
+#and / or
+from sqlalchemy import or_, and_
+stmt = select(Employee).where(
+    and_(Employee.age > 24, Employee.salary > 10000)
+)
+```
+
+
+
+
+
+
+
+
+
+
+
